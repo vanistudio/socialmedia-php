@@ -1,4 +1,11 @@
-<?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthHeader.php'; ?>
+<?php 
+require $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthHeader.php';
+if (!empty($_SESSION['email'])) {
+    die('<script>setTimeout(function(){ location.href = "/" },1000);</script>');
+}
+?>
 <div class="w-full max-w-md mx-auto bg-card border border-border rounded-2xl p-8 shadow-sm">
     <div class="text-center mb-8">
         <div class="h-14 w-14 mx-auto mb-4 rounded-xl bg-vanixjnk/15 flex items-center justify-center">
