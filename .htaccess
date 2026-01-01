@@ -18,3 +18,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 
 RewriteRule ^home$ views/contents/_application/AppHome.php [L]
+RewriteRule ^$ views/contents/_application/AppHome.php [L]
+
+RewriteRule ^login$ views/contents/_authentication/AuthLogin.php [L]
+RewriteRule ^register$ views/contents/_authentication/AuthRegister.php [L]

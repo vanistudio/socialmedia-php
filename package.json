@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npx @tailwindcss/cli@latest -i ./public/input.css -o ./public/css/globals.css --watch",
-    "build": "npx @tailwindcss/cli@latest -i ./public/input.css -o ./public/css/globals.css --minify",
-    "build:debug": "npx @tailwindcss/cli@latest -i ./public/input.css -o ./public/css/globals.css"
+    "dev": "npx @tailwindcss/cli@latest -i ./public/css/input.css -o ./public/css/globals.css --watch",
+    "build": "npx @tailwindcss/cli@latest -i ./public/css/input.css -o ./public/css/globals.css --minify",
+    "build:debug": "npx @tailwindcss/cli@latest -i ./public/css/input.css -o ./public/css/globals.css"
   },
   "keywords": [],
   "author": "",
