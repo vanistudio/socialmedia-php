@@ -1,0 +1,19 @@
+{
+  "name": "socialmedia",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx @tailwindcss/cli@latest -i ./public/input.css -o ./public/css/globals.css --watch",
+    "build": "npx @tailwindcss/cli@latest -i ./public/input.css -o ./public/css/globals.css --minify",
+    "build:debug": "npx @tailwindcss/cli@latest -i ./public/input.css -o ./public/css/globals.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "tailwindcss": "^4.1.18"
+  }
+}
