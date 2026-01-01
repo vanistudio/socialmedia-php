@@ -22,6 +22,8 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
     --radius-2xl: 1rem;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
@@ -192,9 +194,6 @@
   }
   .relative {
     position: relative;
-  }
-  .static {
-    position: static;
   }
   .sticky {
     position: sticky;
@@ -413,6 +412,9 @@
   }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
+  .cursor-not-allowed {
+    cursor: not-allowed;
   }
   .cursor-pointer {
     cursor: pointer;
@@ -677,6 +679,9 @@
   }
   .opacity-0 {
     opacity: 0%;
+  }
+  .opacity-70 {
+    opacity: 70%;
   }
   .shadow-\[0_0_8px_rgba\(255\,34\,94\,0\.5\)\] {
     --tw-shadow: 0 0 8px var(--tw-shadow-color, rgba(255,34,94,0.5));

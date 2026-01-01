@@ -16,8 +16,7 @@
                 </div>
                 <input 
                     type="text" 
-                    id="name" 
-                    name="name" 
+                    id="full_name" 
                     placeholder="Nguyễn Văn A" 
                     class="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
                     required
@@ -33,8 +32,22 @@
                 <input 
                     type="email" 
                     id="email" 
-                    name="email" 
                     placeholder="you@example.com" 
+                    class="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
+                    required
+                >
+            </div>
+        </div>
+        <div class="space-y-2">
+            <label for="username" class="text-sm font-medium text-foreground">Tên đăng nhập</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <iconify-icon icon="solar:letter-linear" class="text-muted-foreground" width="18"></iconify-icon>
+                </div>
+                <input 
+                    type="text" 
+                    id="username" 
+                    placeholder="vani..." 
                     class="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
                     required
                 >
@@ -49,7 +62,6 @@
                 <input 
                     type="password" 
                     id="password" 
-                    name="password" 
                     placeholder="Tối thiểu 8 ký tự" 
                     class="w-full h-10 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
                     required
@@ -67,8 +79,7 @@
                 </div>
                 <input 
                     type="password" 
-                    id="password_confirm" 
-                    name="password_confirm" 
+                    id="re_password" 
                     placeholder="Nhập lại mật khẩu" 
                     class="w-full h-10 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
                     required
@@ -91,7 +102,7 @@
                 </span>
             </label>
         </div>
-        <button type="submit" class="w-full h-10 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition font-medium flex items-center justify-center gap-2">
+        <button type="submit" onclick="register()" class="w-full h-10 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition font-medium flex items-center justify-center gap-2">
             <iconify-icon icon="solar:user-plus-rounded-linear" width="18"></iconify-icon>
             <span>Đăng ký</span>
         </button>
@@ -119,44 +130,50 @@
     </div>
 </div>
 <script>
-    (function () {
-        'use strict';
-        const form = document.getElementById('register-form');
-        if (!form) return;
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const name = document.getElementById('name')?.value?.trim();
-            const email = document.getElementById('email')?.value?.trim();
-            const password = document.getElementById('password')?.value || '';
-            const passwordConfirm = document.getElementById('password_confirm')?.value || '';
-            const termsChecked = document.getElementById('terms')?.checked;
-            if (!name || !email || !password || !passwordConfirm) {
-                toast.error('Thiếu thông tin', {
-                    description: 'Vui lòng nhập đầy đủ họ tên, email và mật khẩu.'
-                });
-                return;
-            }
-            if (password !== passwordConfirm) {
-                window.toast?.error?.('Mật khẩu không khớp', {
-                    description: 'Vui lòng kiểm tra lại mật khẩu xác nhận.'
-                });
-                return;
-            }
-            if (!termsChecked) {
-                toast.warning('Chưa đồng ý điều khoản', {
-                    description: 'Vui lòng tick đồng ý Điều khoản & Chính sách.'
-                });
-                return;
-            }
-            toast.success('Đăng ký thành công', {
-                description: 'Tài khoản của bạn đã được tạo. Đang chuyển sang đăng nhập...'
-            });
+    function register() {
+        const $btn = $("#login-form button[type=submit]");
+        const originalBtnHtml = $btn.html();
+        $btn.prop('disabled', true);
+        $btn.addClass('opacity-70 cursor-not-allowed');
+        $btn.html('<span>Đang xử lý ...</span>');
 
-            setTimeout(function () {
-                window.location.href = '/login';
-            }, 900);
+        var formData = {
+            type: "REGISTER",
+            full_name: $("#full_name").val(),
+            email: $("#email").val(),
+            username: $("#username").val(),
+            password: $("#password").val(),
+            re_password: $("#re_password").val(),
+            terms: $("#terms").is(":checked"),
+        };
+
+        $.post(
+            "/api/controller/auth",
+            formData,
+            function(data) {
+                $btn.prop('disabled', false);
+                $btn.removeClass('opacity-70 cursor-not-allowed');
+                $btn.html(originalBtnHtml);
+
+                if (data && data.status == "error") {
+                    toast.error(data.message);
+                    return;
+                }
+
+                toast.success(data.message);
+                setTimeout(function() {
+                    location.href = "/login";
+                }, 1000);
+            },
+            "json"
+        ).fail(function() {
+            $btn.prop('disabled', false);
+            $btn.removeClass('opacity-70 cursor-not-allowed');
+            $btn.html(originalBtnHtml);
+
+            toast.error('Có lỗi xảy ra', { description: 'Không thể kết nối tới máy chủ.' });
         });
-    })();
+    }
 </script>
 
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthFooter.php'; ?>

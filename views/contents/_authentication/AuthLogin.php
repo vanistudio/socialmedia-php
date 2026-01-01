@@ -88,74 +88,43 @@
 
 <script>
     function login() {
-        Swal.fire({
-            title: "Bạn chắc chắn chứ?",
-            icon: "question",
-            showCancelButton: true,
-            confirmButtonColor: "#E53935",
-            cancelButtonColor: "#B0BEC5",
-            confirmButtonText: "Chắc chắn",
-            cancelButtonText: "Huỷ",
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var formData = {
-                    type: "LOGIN",
-                    username: $("#username").val(),
-                    password: $("#password").val(),
-                };
-                Swal.fire({
-                    title: "Đang xử lý...",
-                    icon: "info",
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    },
-                });
-                $.post(
-                    "/api/controller/auth",
-                    formData,
-                    function(data) {
-                        Swal.close();
-                        if (data.status == "error") {
-                            const Toast = Swal.mixin({
-                                toast: true,
-                                position: "top",
-                                showConfirmButton: false,
-                                timer: 2000,
-                                timerProgressBar: true,
-                                didOpen: (toast) => {
-                                    toast.onmouseenter = Swal.stopTimer;
-                                    toast.onmouseleave = Swal.resumeTimer;
-                                },
-                            });
-                            Toast.fire({
-                                icon: data.status,
-                                title: data.message,
-                            });
-                        } else {
-                            setTimeout(function() {
-                                location.href = "/adminPanel/dashboard";
-                            }, 1000);
-                            const Toast = Swal.mixin({
-                                toast: true,
-                                position: "top",
-                                showConfirmButton: false,
-                                timer: 2000,
-                                timerProgressBar: true,
-                                didOpen: (toast) => {
-                                    toast.onmouseenter = Swal.stopTimer;
-                                    toast.onmouseleave = Swal.resumeTimer;
-                                },
-                            });
-                            Toast.fire({
-                                icon: data.status,
-                                title: data.message,
-                            });
-                        }
-                    },
-                    "json"
-                );
-            }
+        const $btn = $("#login-form button[type=submit]");
+        const originalBtnHtml = $btn.html();
+        $btn.prop('disabled', true);
+        $btn.addClass('opacity-70 cursor-not-allowed');
+        $btn.html('<span>Đang xử lý ...</span>');
+
+        var formData = {
+            type: "LOGIN",
+            email: $("#email").val(),
+            password: $("#password").val(),
+        };
+
+        $.post(
+            "/api/controller/auth",
+            formData,
+            function(data) {
+                $btn.prop('disabled', false);
+                $btn.removeClass('opacity-70 cursor-not-allowed');
+                $btn.html(originalBtnHtml);
+
+                if (data && data.status == "error") {
+                    toast.error(data.message);
+                    return;
+                }
+
+                toast.success(data.message);
+                setTimeout(function() {
+                    location.href = "/";
+                }, 1000);
+            },
+            "json"
+        ).fail(function() {
+            $btn.prop('disabled', false);
+            $btn.removeClass('opacity-70 cursor-not-allowed');
+            $btn.html(originalBtnHtml);
+
+            toast.error('Có lỗi xảy ra', { description: 'Không thể kết nối tới máy chủ.' });
         });
     }
 </script>

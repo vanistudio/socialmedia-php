@@ -12,7 +12,7 @@ define('SERVERNAME', $_ENV['DB_HOST']);
 define('USERNAME', $_ENV['DB_USERNAME']);
 define('PASSWORD', $_ENV['DB_PASSWORD']);
 define('DATABASE', $_ENV['DB_DATABASE']);
-class Boz
+class Vani
 {
     private $ketnoi;
     function connect()
@@ -25,7 +25,7 @@ class Boz
     function setting($data)
     {
         $this->connect();
-        $row = $this->ketnoi->query("SELECT * FROM `setting` WHERE `name` = '$data' ")->fetch_array();
+        $row = $this->ketnoi->query("SELECT * FROM `settings` WHERE `name` = '$data' ")->fetch_array();
         return $row['value'];
     }
     function truncate($table)
@@ -37,7 +37,7 @@ class Boz
     function user_list($data)
     {
         $this->connect();
-        $row = $this->ketnoi->query("SELECT * FROM `user_list` WHERE `username` = '" . $_SESSION['username'] . "'")->fetch_array();
+        $row = $this->ketnoi->query("SELECT * FROM `users` WHERE `email` = '" . $_SESSION['email'] . "'")->fetch_array();
         return $row[$data];
     }
     function query($sql)
