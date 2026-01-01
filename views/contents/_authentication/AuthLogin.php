@@ -58,11 +58,12 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <label class="inline-flex items-center gap-2 cursor-pointer select-none" for="remember">
-                    <input type="checkbox" id="remember" class="peer sr-only" />
-                    <span class="relative flex h-4 w-4 items-center justify-center rounded-[4px] border border-input bg-background shadow-sm transition-colors peer-checked:bg-vanixjnk peer-checked:border-vanixjnk">
-                        <span class="pointer-events-none absolute inset-0 rounded-[4px] ring-0 transition peer-focus-visible:ring-2 peer-focus-visible:ring-vanixjnk/30"></span>
-                        <iconify-icon icon="solar:check-square-linear" class="text-white opacity-0 scale-75 transition-all duration-150 peer-checked:opacity-100 peer-checked:scale-100" width="16"></iconify-icon>
-                    </span>
+                    <div class="relative flex items-center">
+                        <input type="checkbox" id="remember" name="remember" value="1" class="peer h-4 w-4 shrink-0 rounded border-2 border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/20 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none bg-background checked:bg-vanixjnk checked:border-vanixjnk transition-all duration-200 cursor-pointer">
+                        <svg class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
                     <span class="text-sm text-foreground">Ghi nhớ đăng nhập</span>
                 </label>
             </div>
