@@ -7,20 +7,19 @@
         <h1 class="text-2xl font-bold text-foreground mb-2">Tạo tài khoản</h1>
         <p class="text-muted-foreground">Tham gia cộng đồng Vanix Social chỉ với vài bước.</p>
     </div>
-    <form id="register-form" class="space-y-4">
+    <div id="register-form" class="space-y-4">
         <div class="space-y-2">
             <label for="name" class="text-sm font-medium text-foreground">Họ và tên</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <iconify-icon icon="solar:user-linear" class="text-muted-foreground" width="18"></iconify-icon>
                 </div>
-                <input 
-                    type="text" 
-                    id="full_name" 
-                    placeholder="Nguyễn Văn A" 
+                <input
+                    type="text"
+                    id="full_name"
+                    placeholder="Nguyễn Văn A"
                     class="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
-                    required
-                >
+                    required>
             </div>
         </div>
         <div class="space-y-2">
@@ -29,13 +28,12 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <iconify-icon icon="solar:letter-linear" class="text-muted-foreground" width="18"></iconify-icon>
                 </div>
-                <input 
-                    type="email" 
-                    id="email" 
-                    placeholder="you@example.com" 
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="you@example.com"
                     class="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
-                    required
-                >
+                    required>
             </div>
         </div>
         <div class="space-y-2">
@@ -44,13 +42,12 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <iconify-icon icon="solar:letter-linear" class="text-muted-foreground" width="18"></iconify-icon>
                 </div>
-                <input 
-                    type="text" 
-                    id="username" 
-                    placeholder="vani..." 
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="vani..."
                     class="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
-                    required
-                >
+                    required>
             </div>
         </div>
         <div class="space-y-2">
@@ -59,13 +56,12 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <iconify-icon icon="solar:lock-password-linear" class="text-muted-foreground" width="18"></iconify-icon>
                 </div>
-                <input 
-                    type="password" 
-                    id="password" 
-                    placeholder="Tối thiểu 8 ký tự" 
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Tối thiểu 8 ký tự"
                     class="w-full h-10 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
-                    required
-                >
+                    required>
                 <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <iconify-icon icon="solar:eye-closed-linear" class="text-muted-foreground hover:text-foreground transition" width="18"></iconify-icon>
                 </button>
@@ -77,13 +73,12 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <iconify-icon icon="solar:lock-password-linear" class="text-muted-foreground" width="18"></iconify-icon>
                 </div>
-                <input 
-                    type="password" 
-                    id="re_password" 
-                    placeholder="Nhập lại mật khẩu" 
+                <input
+                    type="password"
+                    id="re_password"
+                    placeholder="Nhập lại mật khẩu"
                     class="w-full h-10 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
-                    required
-                >
+                    required>
                 <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <iconify-icon icon="solar:eye-closed-linear" class="text-muted-foreground hover:text-foreground transition" width="18"></iconify-icon>
                 </button>
@@ -92,7 +87,7 @@
         <div class="flex items-start gap-3">
             <label class="inline-flex items-start gap-2 cursor-pointer select-none" for="terms">
                 <div class="relative flex items-center mt-1">
-                    <input type="checkbox" id="terms" name="terms" value="1" required class="peer h-4 w-4 shrink-0 rounded border-2 border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/20 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none bg-background checked:bg-vanixjnk checked:border-vanixjnk transition-all duration-200 cursor-pointer">
+                    <input type="checkbox" id="terms" value="1" required class="peer h-4 w-4 shrink-0 rounded border-2 border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/20 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none bg-background checked:bg-vanixjnk checked:border-vanixjnk transition-all duration-200 cursor-pointer">
                     <svg class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
@@ -102,11 +97,11 @@
                 </span>
             </label>
         </div>
-        <button type="submit" onclick="register()" class="w-full h-10 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition font-medium flex items-center justify-center gap-2">
+        <button type="button" onclick="register()" class="w-full h-10 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition font-medium flex items-center justify-center gap-2">
             <iconify-icon icon="solar:user-plus-rounded-linear" width="18"></iconify-icon>
             <span>Đăng ký</span>
         </button>
-    </form>
+    </div>
     <div class="relative my-6">
         <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-border"></div>
@@ -131,7 +126,7 @@
 </div>
 <script>
     function register() {
-        const $btn = $("#login-form button[type=submit]");
+        const $btn = $("#register-form button[onclick=\"register()\"]");
         const originalBtnHtml = $btn.html();
         $btn.prop('disabled', true);
         $btn.addClass('opacity-70 cursor-not-allowed');
@@ -171,7 +166,9 @@
             $btn.removeClass('opacity-70 cursor-not-allowed');
             $btn.html(originalBtnHtml);
 
-            toast.error('Có lỗi xảy ra', { description: 'Không thể kết nối tới máy chủ.' });
+            toast.error('Có lỗi xảy ra', {
+                description: 'Không thể kết nối tới máy chủ.'
+            });
         });
     }
 </script>

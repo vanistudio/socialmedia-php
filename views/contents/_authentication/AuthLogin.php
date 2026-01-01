@@ -7,7 +7,7 @@
         <h1 class="text-2xl font-bold text-foreground mb-2">Đăng nhập</h1>
         <p class="text-muted-foreground">Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục.</p>
     </div>
-    <form id="login-form" class="space-y-4">
+    <div id="login-form" class="space-y-4">
         <div class="space-y-2">
             <label for="email" class="text-sm font-medium text-foreground">Email</label>
             <div class="relative">
@@ -62,7 +62,7 @@
             <iconify-icon icon="solar:login-3-linear" width="18"></iconify-icon>
             <span>Đăng nhập</span>
         </button>
-    </form>
+    </div>
     <div class="relative my-6">
         <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-border"></div>

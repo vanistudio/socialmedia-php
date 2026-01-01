@@ -26,18 +26,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     if ($_POST['type'] == "REGISTER") {
-        $full_name = check_string($_POST['full_name']);
+        $full_name = check_string2($_POST['full_name']);
         $email = check_string($_POST['email']);
         $username = check_string($_POST['username']);
         $password = check_string($_POST['password']);
         $re_password = check_string($_POST['re_password']);
-        $terms = check_string($_POST['terms']);
+        $terms = isset($_POST['terms']) ? check_string($_POST['terms']) : '';
+        $terms_bool = ($terms === '1' || $terms === 1 || $terms === 'true' || $terms === true);
         if (empty($full_name) || empty($email) || empty($username) || empty($password) || empty($re_password)) {
             die(json_encode(["status" => "error", "message" => "Vui lòng nhập đầy đủ thông tin"]));
-        } elseif (empty($terms)) {
+        } elseif (!$terms_bool) {
             die(json_encode(["status" => "error", "message" => "Bạn phải đồng ý với điều khoản và chính sách"]));
-        } elseif (!preg_match('/^[A-Za-z]+(\s[A-Za-z]+)*$/', $full_name)) {
-            die(json_encode(["status" => "error", "message" => "Họ và tên chỉ được chứa chữ hoa, chữ thường và khoảng trắng"]));
+        } elseif (!preg_match('/^[\p{L}\s]+$/u', $full_name)) {
+            die(json_encode(["status" => "error", "message" => "Họ và tên không được chứa ký tự đặc biệt"]));
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             die(json_encode(["status" => "error", "message" => "Email không hợp lệ"]));
         } elseif (strlen($username) < 6) {
@@ -46,6 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             die(json_encode(["status" => "error", "message" => "Tên đăng nhập chỉ được chứa chữ hoa và chữ thường"]));
         } elseif (strlen($password) < 8) {
             die(json_encode(["status" => "error", "message" => "Mật khẩu phải tối thiểu 8 ký tự"]));
+        } elseif (!preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[^A-Za-z0-9]/', $password)) {
+            die(json_encode(["status" => "error", "message" => "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt"]));
         } elseif ($password != $re_password) {
             die(json_encode(["status" => "error", "message" => "Nhập lại mật khẩu không đúng"]));
         } else {
@@ -54,7 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 die(json_encode(["status" => "error", "message" => "Tên đăng nhập hoặc email đã tồn tại"]));
             } else {
                 $Encode_password = password_hash($password, PASSWORD_BCRYPT);
-                $Vani->insert("users", ['username' => $username, 'password' => $Encode_password, 'email' => $email, 'full_name' => $full_name, 'level' => 'user']);
+                $Vani->insert("users", [
+                    'username' => $username,
+                    'password' => $Encode_password,
+                    'email' => $email,
+                    'full_name' => $full_name,
+                    'level' => 'user'
+                ]);
                 die(json_encode(["status" => "success", "message" => "Đăng ký thành công"]));
             }
         }
