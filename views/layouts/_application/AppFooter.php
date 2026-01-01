@@ -17,7 +17,5 @@
             </div>
         </footer>
     </div>
-    <script src="/public/js/globals.js"></script>
-    <script src="/public/js/sonner.js"></script>
 </body>
 </html>

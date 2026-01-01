@@ -1,6 +1,4 @@
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthHeader.php'; ?>
-
-<!-- Register Form Card -->
 <div class="w-full max-w-md mx-auto bg-card border border-border rounded-2xl p-8 shadow-sm">
     <div class="text-center mb-8">
         <div class="h-14 w-14 mx-auto mb-4 rounded-xl bg-vanixjnk/15 flex items-center justify-center">
@@ -9,9 +7,7 @@
         <h1 class="text-2xl font-bold text-foreground mb-2">Tạo tài khoản</h1>
         <p class="text-muted-foreground">Tham gia cộng đồng Vanix Social chỉ với vài bước.</p>
     </div>
-
-    <form class="space-y-4">
-        <!-- Full name -->
+    <form id="register-form" class="space-y-4">
         <div class="space-y-2">
             <label for="name" class="text-sm font-medium text-foreground">Họ và tên</label>
             <div class="relative">
@@ -28,8 +24,6 @@
                 >
             </div>
         </div>
-
-        <!-- Email -->
         <div class="space-y-2">
             <label for="email" class="text-sm font-medium text-foreground">Email</label>
             <div class="relative">
@@ -46,8 +40,6 @@
                 >
             </div>
         </div>
-
-        <!-- Password -->
         <div class="space-y-2">
             <label for="password" class="text-sm font-medium text-foreground">Mật khẩu</label>
             <div class="relative">
@@ -67,8 +59,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Confirm password -->
         <div class="space-y-2">
             <label for="password_confirm" class="text-sm font-medium text-foreground">Nhập lại mật khẩu</label>
             <div class="relative">
@@ -88,8 +78,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Terms -->
         <div class="flex items-start gap-3">
             <label class="inline-flex items-start gap-2 cursor-pointer select-none" for="terms">
                 <div class="relative flex items-center mt-1">
@@ -103,15 +91,11 @@
                 </span>
             </label>
         </div>
-
-        <!-- Submit -->
         <button type="submit" class="w-full h-10 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition font-medium flex items-center justify-center gap-2">
             <iconify-icon icon="solar:user-plus-rounded-linear" width="18"></iconify-icon>
             <span>Đăng ký</span>
         </button>
     </form>
-
-    <!-- Divider -->
     <div class="relative my-6">
         <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-border"></div>
@@ -120,8 +104,6 @@
             <span class="px-2 bg-card text-muted-foreground">hoặc tiếp tục với</span>
         </div>
     </div>
-
-    <!-- Social Register -->
     <div class="grid grid-cols-2 gap-3">
         <button type="button" class="h-10 rounded-lg border border-input bg-card hover:bg-accent transition flex items-center justify-center gap-2 text-foreground">
             <iconify-icon icon="logos:google-icon" width="18"></iconify-icon>
@@ -132,11 +114,49 @@
             <span class="text-sm font-medium">Facebook</span>
         </button>
     </div>
-
-    <!-- Login link -->
     <div class="mt-6 text-center text-sm text-muted-foreground">
         Đã có tài khoản? <a href="/login" class="text-vanixjnk hover:underline font-medium">Đăng nhập</a>
     </div>
 </div>
+<script>
+    (function () {
+        'use strict';
+        const form = document.getElementById('register-form');
+        if (!form) return;
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('name')?.value?.trim();
+            const email = document.getElementById('email')?.value?.trim();
+            const password = document.getElementById('password')?.value || '';
+            const passwordConfirm = document.getElementById('password_confirm')?.value || '';
+            const termsChecked = document.getElementById('terms')?.checked;
+            if (!name || !email || !password || !passwordConfirm) {
+                toast.error('Thiếu thông tin', {
+                    description: 'Vui lòng nhập đầy đủ họ tên, email và mật khẩu.'
+                });
+                return;
+            }
+            if (password !== passwordConfirm) {
+                window.toast?.error?.('Mật khẩu không khớp', {
+                    description: 'Vui lòng kiểm tra lại mật khẩu xác nhận.'
+                });
+                return;
+            }
+            if (!termsChecked) {
+                toast.warning('Chưa đồng ý điều khoản', {
+                    description: 'Vui lòng tick đồng ý Điều khoản & Chính sách.'
+                });
+                return;
+            }
+            toast.success('Đăng ký thành công', {
+                description: 'Tài khoản của bạn đã được tạo. Đang chuyển sang đăng nhập...'
+            });
+
+            setTimeout(function () {
+                window.location.href = '/login';
+            }, 900);
+        });
+    })();
+</script>
 
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthFooter.php'; ?>

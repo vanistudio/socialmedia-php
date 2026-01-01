@@ -3,11 +3,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
 ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-    <!-- Main Content (2/3 width on lg) -->
     <div class="lg:col-span-3 space-y-6">
-
-        <!-- Create Post -->
         <div class="bg-card border border-border rounded-lg p-4">
             <div class="flex items-start gap-4">
                 <div class="h-10 w-10 rounded-full bg-vanixjnk/15 flex items-center justify-center border border-input">
@@ -32,8 +28,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                 </div>
             </div>
         </div>
-
-        <!-- Post 1 -->
         <div class="bg-card border border-border rounded-lg">
             <div class="p-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -66,15 +60,11 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                 </button>
             </div>
         </div>
-
     </div>
-
-    <!-- Sidebar (1/3 width on lg) -->
     <div class="lg:col-span-1 space-y-6">
         <div class="bg-card border border-border rounded-lg p-4">
             <h3 class="font-semibold text-foreground mb-4">Gợi ý cho bạn</h3>
             <div class="space-y-4">
-                <!-- Suggestion 1 -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <img src="https://i.pravatar.cc/150?u=a042581f4e29026704e" alt="Avatar" class="h-10 w-10 rounded-full">
@@ -85,7 +75,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                     </div>
                     <button class="h-8 px-3 rounded-lg bg-vanixjnk/15 text-vanixjnk hover:bg-vanixjnk/25 transition text-xs font-bold">Kết bạn</button>
                 </div>
-                <!-- Suggestion 2 -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <img src="https://i.pravatar.cc/150?u=a042581f4e29026704f" alt="Avatar" class="h-10 w-10 rounded-full">
@@ -99,9 +88,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
             </div>
         </div>
     </div>
-
 </div>
-
 <?php 
 require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppFooter.php'; 
 ?>

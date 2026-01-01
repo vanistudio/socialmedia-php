@@ -62,4 +62,3 @@ function oklab_to_oklch($L, $a, $b) {
 function get_vanixjnk_oklch($hex) {
     return hex_to_oklch($hex);
 }
-
