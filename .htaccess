@@ -22,3 +22,5 @@ RewriteRule ^$ views/contents/_application/AppHome.php [L]
 
 RewriteRule ^login$ views/contents/_authentication/AuthLogin.php [L]
 RewriteRule ^register$ views/contents/_authentication/AuthRegister.php [L]
+
+RewriteRule ^api/controller/auth$ controllers/_authentication/AuthController.php [L]

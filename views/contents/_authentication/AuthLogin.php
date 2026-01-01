@@ -58,7 +58,7 @@
                 </label>
             </div>
         </div>
-        <button type="submit" class="w-full h-10 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition font-medium flex items-center justify-center gap-2">
+        <button type="submit" onclick="login()" class="w-full h-10 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition font-medium flex items-center justify-center gap-2">
             <iconify-icon icon="solar:login-3-linear" width="18"></iconify-icon>
             <span>Đăng nhập</span>
         </button>
@@ -87,31 +87,77 @@
 </div>
 
 <script>
-    (function() {
-        'use strict';
-
-        const form = document.getElementById('login-form');
-        if (!form) return;
-
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById('email')?.value?.trim();
-            const password = document.getElementById('password')?.value || '';
-            if (!email || !password) {
-                toast.error('Thiếu thông tin', {
-                    description: 'Vui lòng nhập email và mật khẩu.'
+    function login() {
+        Swal.fire({
+            title: "Bạn chắc chắn chứ?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#E53935",
+            cancelButtonColor: "#B0BEC5",
+            confirmButtonText: "Chắc chắn",
+            cancelButtonText: "Huỷ",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var formData = {
+                    type: "LOGIN",
+                    username: $("#username").val(),
+                    password: $("#password").val(),
+                };
+                Swal.fire({
+                    title: "Đang xử lý...",
+                    icon: "info",
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
                 });
-                return;
+                $.post(
+                    "/api/controller/auth",
+                    formData,
+                    function(data) {
+                        Swal.close();
+                        if (data.status == "error") {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: "top",
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.onmouseenter = Swal.stopTimer;
+                                    toast.onmouseleave = Swal.resumeTimer;
+                                },
+                            });
+                            Toast.fire({
+                                icon: data.status,
+                                title: data.message,
+                            });
+                        } else {
+                            setTimeout(function() {
+                                location.href = "/adminPanel/dashboard";
+                            }, 1000);
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: "top",
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.onmouseenter = Swal.stopTimer;
+                                    toast.onmouseleave = Swal.resumeTimer;
+                                },
+                            });
+                            Toast.fire({
+                                icon: data.status,
+                                title: data.message,
+                            });
+                        }
+                    },
+                    "json"
+                );
             }
-            toast.success('Đăng nhập thành công', {
-                description: 'Chào mừng bạn quay trở lại!'
-            });
-            setTimeout(function() {
-                window.location.href = '/';
-            }, 2000);
         });
-    })();
+    }
 </script>
 
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthFooter.php'; ?>
