@@ -8,26 +8,25 @@
                 </a>
             </li>
             <li>
-                <a href="/explore" class="group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition">
+                <a href="/explore" class="group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition" onclick="toast.info('Đang phát triển'); return false;">
                     <iconify-icon icon="solar:compass-linear" width="22"></iconify-icon>
                     <span class="text-[10px] font-medium mt-0.5">Explore</span>
                 </a>
             </li>
             <li>
-                <button type="button" class="flex flex-col items-center justify-center w-14 h-12 rounded-xl bg-vanixjnk text-white hover:bg-vanixjnk/90 transition shadow-sm" aria-label="Create post">
+                <button type="button" class="flex flex-col items-center justify-center w-14 h-12 rounded-xl bg-vanixjnk text-white hover:bg-vanixjnk/90 transition shadow-sm" aria-label="Create post" onclick="toast.info('Tính năng đang phát triển', { description: 'Sắp có form đăng bài.' })">
                     <iconify-icon icon="solar:add-circle-linear" width="24"></iconify-icon>
                     <span class="text-[10px] font-semibold mt-0.5">Post</span>
                 </button>
             </li>
             <li>
-                <a href="/notifications" class="relative group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition">
-                    <iconify-icon icon="solar:bell-linear" width="22"></iconify-icon>
-                    <span class="text-[10px] font-medium mt-0.5">Alerts</span>
-                    <span class="absolute top-2 right-3 h-2.5 w-2.5 rounded-full bg-vanixjnk"></span>
+                <a href="/settings" class="group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition">
+                    <iconify-icon icon="solar:settings-linear" width="22"></iconify-icon>
+                    <span class="text-[10px] font-medium mt-0.5">Settings</span>
                 </a>
             </li>
             <li>
-                <a href="/profile" class="group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition">
+                <a href="<?php echo isset($Vani) && isset($_SESSION['email']) ? '/u/' . htmlspecialchars($Vani->user_list('username')) : '/settings'; ?>" class="group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition">
                     <iconify-icon icon="solar:user-circle-linear" width="22"></iconify-icon>
                     <span class="text-[10px] font-medium mt-0.5">Me</span>
                 </a>
