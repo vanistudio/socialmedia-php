@@ -1,22 +1,16 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
 require $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
-
 header('Content-Type: application/json; charset=utf-8');
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(["status" => "error", "message" => "Yêu cầu không hợp lệ"]);
     exit;
 }
-
 if (!isset($_SESSION['email'])) {
     echo json_encode(["status" => "error", "message" => "Bạn cần đăng nhập"]);
     exit;
 }
-
 $type = $_POST['type'] ?? '';
-
-// Current user
 $currentEmail = $_SESSION['email'];
 $currentUser = $Vani->get_row("SELECT * FROM `users` WHERE `email` = '" . addslashes($currentEmail) . "'");
 if (!$currentUser) {
@@ -35,8 +29,6 @@ if ($type === 'UPDATE_PROFILE') {
         echo json_encode(["status" => "error", "message" => "Vui lòng nhập họ tên và username"]);
         exit;
     }
-
-    // basic username rule: letters only (match AuthController)
     if (strlen($username) < 3) {
         echo json_encode(["status" => "error", "message" => "Username phải tối thiểu 3 ký tự"]);
         exit;
@@ -45,8 +37,6 @@ if ($type === 'UPDATE_PROFILE') {
         echo json_encode(["status" => "error", "message" => "Username chỉ được chứa chữ (A-Z, a-z)"]);
         exit;
     }
-
-    // Check username unique (exclude current)
     $exists = $Vani->get_row("SELECT * FROM `users` WHERE `username` = '$username' AND `email` != '" . addslashes($currentEmail) . "'");
     if ($exists) {
         echo json_encode(["status" => "error", "message" => "Username đã tồn tại"]);
@@ -64,7 +54,6 @@ if ($type === 'UPDATE_PROFILE') {
     echo json_encode(["status" => "success", "message" => "Cập nhật profile thành công"]);
     exit;
 }
-
 if ($type === 'CHANGE_PASSWORD') {
     $current_password = check_string2($_POST['current_password'] ?? '');
     $new_password = check_string2($_POST['new_password'] ?? '');
@@ -85,7 +74,6 @@ if ($type === 'CHANGE_PASSWORD') {
         exit;
     }
 
-    // Match AuthController password policy
     if (strlen($new_password) < 8) {
         echo json_encode(["status" => "error", "message" => "Mật khẩu phải tối thiểu 8 ký tự"]);
         exit;

@@ -25,7 +25,7 @@ class Vani
     function setting($data)
     {
         $this->connect();
-        $row = $this->ketnoi->query("SELECT * FROM `settings` WHERE `name` = '$data' ")->fetch_array();
+        $row = $this->ketnoi->query("SELECT * FROM `settings` WHERE `key` = '$data' ")->fetch_array();
         return $row['value'];
     }
     function truncate($table)

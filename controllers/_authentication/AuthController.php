@@ -57,12 +57,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 die(json_encode(["status" => "error", "message" => "Tên đăng nhập hoặc email đã tồn tại"]));
             } else {
                 $Encode_password = password_hash($password, PASSWORD_BCRYPT);
+                $defaultAvatar = 'https://placehold.co/200x200/png?text=' . urlencode($username);
+                $defaultBanner = 'https://placehold.co/1200x400/png?text=' . urlencode($username);
+
                 $Vani->insert("users", [
                     'username' => $username,
                     'password' => $Encode_password,
                     'email' => $email,
                     'full_name' => $full_name,
-                    'level' => 'user'
+                    'level' => 'user',
+                    'avatar' => $defaultAvatar,
+                    'banner' => $defaultBanner,
+                    'bio' => ''
                 ]);
                 die(json_encode(["status" => "success", "message" => "Đăng ký thành công"]));
             }

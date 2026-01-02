@@ -23,8 +23,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
             <span>Xem profile</span>
         </a>
     </div>
-
-    <!-- Tabs Navigation -->
     <div class="border-b border-border">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
             <button type="button" data-tab="profile" class="tab-button border-b-2 border-vanixjnk text-vanixjnk whitespace-nowrap py-4 px-1 text-sm font-medium">
@@ -41,10 +39,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
             </button>
         </nav>
     </div>
-
-    <!-- Tab Content -->
     <div class="space-y-6">
-        <!-- Profile Tab -->
         <div id="profile-tab" class="tab-content">
             <div class="bg-card border border-border rounded-2xl p-6 shadow-sm">
                 <h2 class="text-lg font-semibold text-foreground mb-4">Thông tin cá nhân</h2>
@@ -81,13 +76,11 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                 </form>
             </div>
         </div>
-
-        <!-- Images Tab -->
         <div id="images-tab" class="tab-content hidden">
             <div class="bg-card border border-border rounded-2xl p-6 shadow-sm">
                 <h2 class="text-lg font-semibold text-foreground mb-4">Hình ảnh</h2>
                 <form id="images-form" class="space-y-5">
-                    <input type="hidden" name="type" value="UPDATE_IMAGES">
+                    <input type="hidden" name="type" value="UPDATE_PROFILE">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
@@ -134,8 +127,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                 </form>
             </div>
         </div>
-
-        <!-- Security Tab -->
         <div id="security-tab" class="tab-content hidden">
             <div class="bg-card border border-border rounded-2xl p-6 shadow-sm">
                 <h2 class="text-lg font-semibold text-foreground mb-4">Bảo mật</h2>
@@ -179,8 +170,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
         </div>
     </div>
 </div>
-
-<!-- Upload Media Dialog (shadcn/radix-like) -->
 <div id="upload-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog>
     <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
     <div class="relative w-full max-w-lg mx-auto" data-dialog-content>
@@ -222,19 +211,12 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
 </div>
 
 <script>
-// Hàm chuyển tab
 function switchTab(tabName) {
-    // Ẩn tất cả các tab content
     $('.tab-content').addClass('hidden');
-    // Hiển thị tab được chọn
     $(`#${tabName}-tab`).removeClass('hidden');
-    
-    // Cập nhật trạng thái active của tab button
     $('.tab-button').removeClass('border-vanixjnk text-vanixjnk').addClass('border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300');
     $(`[data-tab="${tabName}"]`).removeClass('text-muted-foreground hover:text-foreground hover:border-gray-300').addClass('border-vanixjnk text-vanixjnk');
 }
-
-// Hàm toggle hiển thị mật khẩu
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     const icon = $(`#${inputId}`).siblings('button').find('iconify-icon');
@@ -246,58 +228,43 @@ function togglePassword(inputId) {
         icon.attr('icon', 'solar:eye-closed-linear');
     }
 }
-
 $(document).ready(function() {
-    // Xử lý click vào tab
     $('[data-tab]').on('click', function() {
         const tabName = $(this).data('tab');
         switchTab(tabName);
     });
-
-    // Mặc định hiển thị tab đầu tiên
     switchTab('profile');
-
-    // ===== Upload dialog (shadcn/radix-like) =====
     const uploadDialog = window.initDialog ? window.initDialog('upload-dialog') : null;
-
     $('[data-upload-trigger]').on('click', function () {
-        const target = $(this).data('upload-trigger'); // avatar | banner
+        const target = $(this).data('upload-trigger');
         $('#upload-target').val(target);
         $('#upload-file').val('');
         $('#upload-preview').addClass('hidden');
         $('#upload-preview-img').attr('src', '');
-
         if (uploadDialog) uploadDialog.open();
         else $('#upload-dialog').removeClass('hidden').addClass('flex').attr('data-state', 'open');
     });
-
     $('#upload-file').on('change', function () {
         const file = this.files && this.files[0];
         if (!file) return;
-
         const url = URL.createObjectURL(file);
         $('#upload-preview-img').attr('src', url);
         $('#upload-preview').removeClass('hidden');
     });
-
     $('#btn-upload').on('click', function () {
         const $btn = $(this);
         const original = $btn.text();
         const fileInput = document.getElementById('upload-file');
         const file = fileInput.files && fileInput.files[0];
         const target = $('#upload-target').val();
-
         if (!file) {
             toast.error('Vui lòng chọn file');
             return;
         }
-
         const formData = new FormData();
         formData.append('file', file);
         formData.append('target', target);
-
         $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed').text('Đang tải...');
-
         $.ajax({
             url: '/api/controller/upload',
             type: 'POST',
@@ -315,7 +282,6 @@ $(document).ready(function() {
                         $('#banner').val(url);
                         $('#banner-preview').attr('src', url);
                     }
-
                     toast.success(data.message || 'Upload thành công');
 
                     if (uploadDialog) uploadDialog.close();
@@ -325,15 +291,13 @@ $(document).ready(function() {
                 }
             },
             error: function () {
-                toast.error('Có lỗi xảy ra', { description: 'Không thể kết nối tới máy chủ.' });
+                toast.error('Không thể kết nối tới máy chủ');
             },
             complete: function () {
                 $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').text(original);
             }
         });
     });
-
-    // ===== Submit forms (jQuery like AuthLogin) =====
     $('#profile-form').on('submit', function(e) {
         e.preventDefault();
         const $btn = $(this).find('button[type="submit"]');
@@ -359,81 +323,83 @@ $(document).ready(function() {
         ).fail(function () {
             $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed')
                 .html(originalBtnHtml);
-            toast.error('Có lỗi xảy ra', { description: 'Không thể kết nối tới máy chủ.' });
+            toast.error('Không thể kết nối tới máy chủ');
         });
     });
-
-    // Xử lý form hình ảnh
     $('#images-form').on('submit', function(e) {
         e.preventDefault();
-        const $btn = $(this).find('button[type="submit"]');
-        const originalBtnHtml = $btn.html();
-        
-        $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed')
-            .html('<span>Đang lưu...</span>');
 
-        $.ajax({
-            url: '/api/controller/app',
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.status === 'success') {
-                    // Cập nhật preview ảnh
-                    const avatarUrl = $('#avatar').val();
-                    const bannerUrl = $('#banner').val();
-                    if (avatarUrl) $('#avatar-preview').attr('src', avatarUrl);
-                    if (bannerUrl) $('#banner-preview').attr('src', bannerUrl);
-                    
-                    toast.success('Thành công', { description: response.message });
-                } else {
-                    toast.error('Lỗi', { description: response.message || 'Có lỗi xảy ra' });
+        const $btn = $(this).find('button[type=submit]');
+        const originalBtnHtml = $btn.html();
+
+        $btn.prop('disabled', true);
+        $btn.addClass('opacity-70 cursor-not-allowed');
+        $btn.html('<span>Đang lưu ...</span>');
+
+        $.post(
+            '/api/controller/app',
+            $(this).serialize(),
+            function (data) {
+                $btn.prop('disabled', false);
+                $btn.removeClass('opacity-70 cursor-not-allowed');
+                $btn.html(originalBtnHtml);
+
+                if (data && data.status == 'error') {
+                    toast.error(data.message);
+                    return;
                 }
+
+                const avatarUrl = $('#avatar').val();
+                const bannerUrl = $('#banner').val();
+                if (avatarUrl) $('#avatar-preview').attr('src', avatarUrl);
+                if (bannerUrl) $('#banner-preview').attr('src', bannerUrl);
+
+                toast.success(data.message || 'Lưu thành công');
             },
-            error: function() {
-                toast.error('Lỗi', { description: 'Không thể kết nối tới máy chủ' });
-            },
-            complete: function() {
-                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed')
-                    .html(originalBtnHtml);
-            }
+            'json'
+        ).fail(function () {
+            $btn.prop('disabled', false);
+            $btn.removeClass('opacity-70 cursor-not-allowed');
+            $btn.html(originalBtnHtml);
+
+            toast.error('Không thể kết nối tới máy chủ');
         });
     });
-
-    // Xử lý form đổi mật khẩu
     $('#password-form').on('submit', function(e) {
         e.preventDefault();
-        const $btn = $(this).find('button[type="submit"]');
-        const originalBtnHtml = $btn.html();
-        
-        $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed')
-            .html('<span>Đang cập nhật...</span>');
 
-        $.ajax({
-            url: '/api/controller/app',
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.status === 'success') {
-                    // Xóa các trường mật khẩu
-                    $('#current_password, #new_password, #confirm_password').val('');
-                    toast.success('Thành công', { description: response.message });
-                } else {
-                    toast.error('Lỗi', { description: response.message || 'Có lỗi xảy ra' });
+        const $btn = $(this).find('button[type=submit]');
+        const originalBtnHtml = $btn.html();
+
+        $btn.prop('disabled', true);
+        $btn.addClass('opacity-70 cursor-not-allowed');
+        $btn.html('<span>Đang cập nhật ...</span>');
+
+        $.post(
+            '/api/controller/app',
+            $(this).serialize(),
+            function (data) {
+                $btn.prop('disabled', false);
+                $btn.removeClass('opacity-70 cursor-not-allowed');
+                $btn.html(originalBtnHtml);
+
+                if (data && data.status == 'error') {
+                    toast.error(data.message);
+                    return;
                 }
+
+                $('#current_password, #new_password, #confirm_password').val('');
+                toast.success(data.message || 'Cập nhật thành công');
             },
-            error: function() {
-                toast.error('Lỗi', { description: 'Không thể kết nối tới máy chủ' });
-            },
-            complete: function() {
-                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed')
-                    .html(originalBtnHtml);
-            }
+            'json'
+        ).fail(function () {
+            $btn.prop('disabled', false);
+            $btn.removeClass('opacity-70 cursor-not-allowed');
+            $btn.html(originalBtnHtml);
+
+            toast.error('Không thể kết nối tới máy chủ');
         });
     });
-
-    // Xử lý preview ảnh khi nhập URL
     $('#avatar, #banner').on('change', function() {
         const url = $(this).val();
         if (url) {

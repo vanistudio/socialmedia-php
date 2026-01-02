@@ -26,14 +26,12 @@ if ($file['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-// Validate size (max 5MB)
 $maxSize = 5 * 1024 * 1024;
 if ($file['size'] > $maxSize) {
     echo json_encode(["status" => "error", "message" => "File quá lớn (tối đa 5MB)"]);
     exit;
 }
 
-// Validate mime/type
 $finfo = finfo_open(FILEINFO_MIME_TYPE);
 $mime = finfo_file($finfo, $file['tmp_name']);
 finfo_close($finfo);
@@ -52,13 +50,11 @@ if (!isset($allowed[$mime])) {
 
 $ext = $allowed[$mime];
 
-// Ensure folder exists
 $mediaDir = $_SERVER['DOCUMENT_ROOT'] . '/public/media';
 if (!is_dir($mediaDir)) {
     @mkdir($mediaDir, 0755, true);
 }
 
-// File name
 $rand = bin2hex(random_bytes(10));
 $filename = 'media_' . date('Ymd_His') . '_' . $rand . '.' . $ext;
 $destPath = $mediaDir . '/' . $filename;
