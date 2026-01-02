@@ -1,3 +1,7 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
+?>
 <!DOCTYPE html>
 <html lang="en" class="light">
 

@@ -12,7 +12,7 @@
                 <span class="hidden sm:inline">Trang chủ</span>
             </a>
 
-            <button id="theme-toggle" class="h-10 w-14 rounded-full border border-input bg-card hover:bg-accent transition px-1 flex items-center" aria-label="Toggle theme">
+            <button id="theme-toggle" class="h-10 w-16 rounded-full border border-input bg-card hover:bg-accent transition px-1 flex items-center" aria-label="Toggle theme">
                 <div class="w-full flex items-center">
                     <div class="h-8 w-8 rounded-full bg-vanixjnk/15 flex items-center justify-center translate-x-0 transition-transform duration-300">
                         <iconify-icon icon="solar:moon-linear" class="text-vanixjnk" width="18"></iconify-icon>
