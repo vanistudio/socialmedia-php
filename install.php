@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
+
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
+
 $host = $_ENV['DB_HOST'];
 $username = $_ENV['DB_USERNAME'];
 $password = $_ENV['DB_PASSWORD'];
@@ -25,32 +27,25 @@ try {
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `users` (
             `id` INT NOT NULL AUTO_INCREMENT,
-
-            -- identity
             `full_name` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `username` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `email` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `password` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `level` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `session` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-
-            -- profile
             `avatar` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `banner` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `bio` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `location` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `website` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
             `birthday` DATE NULL DEFAULT NULL,
-
-            -- meta
             `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
             `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
     ");
 
-    // SETTINGS (new schema)
+    // SETTINGS
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `settings` (
             `id` INT NOT NULL AUTO_INCREMENT,
@@ -60,6 +55,88 @@ try {
             `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`),
             UNIQUE KEY `settings_key_unique` (`key`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ");
+
+    // FOLLOWS
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `follows` (
+            `id` BIGINT NOT NULL AUTO_INCREMENT,
+            `follower_id` INT NOT NULL,
+            `following_id` INT NOT NULL,
+            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uniq_follow` (`follower_id`, `following_id`),
+            KEY `idx_follower` (`follower_id`),
+            KEY `idx_following` (`following_id`),
+            CONSTRAINT `fk_follows_follower` FOREIGN KEY (`follower_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_follows_following` FOREIGN KEY (`following_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ");
+
+    // POSTS (media_url removed)
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `posts` (
+            `id` BIGINT NOT NULL AUTO_INCREMENT,
+            `user_id` INT NOT NULL,
+            `content` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+            `visibility` VARCHAR(20) NULL DEFAULT 'public',
+            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_posts_user` (`user_id`),
+            CONSTRAINT `fk_posts_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ");
+
+    // POST MEDIA (one post can have multiple media)
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `post_media` (
+            `id` BIGINT NOT NULL AUTO_INCREMENT,
+            `post_id` BIGINT NOT NULL,
+            `media_url` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+            `media_type` VARCHAR(20) NOT NULL DEFAULT 'image', -- 'image', 'video'
+            `sort_order` INT NOT NULL DEFAULT 0,
+            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_media_post` (`post_id`),
+            CONSTRAINT `fk_media_post` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ");
+
+    // POST LIKES
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `post_likes` (
+            `id` BIGINT NOT NULL AUTO_INCREMENT,
+            `post_id` BIGINT NOT NULL,
+            `user_id` INT NOT NULL,
+            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uniq_like` (`post_id`, `user_id`),
+            KEY `idx_likes_post` (`post_id`),
+            KEY `idx_likes_user` (`user_id`),
+            CONSTRAINT `fk_likes_post` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_likes_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ");
+
+    // POST COMMENTS
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `post_comments` (
+            `id` BIGINT NOT NULL AUTO_INCREMENT,
+            `post_id` BIGINT NOT NULL,
+            `user_id` INT NOT NULL,
+            `parent_id` BIGINT NULL DEFAULT NULL,
+            `content` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_comments_post` (`post_id`),
+            KEY `idx_comments_user` (`user_id`),
+            KEY `idx_comments_parent` (`parent_id`),
+            CONSTRAINT `fk_comments_post` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_comments_parent` FOREIGN KEY (`parent_id`) REFERENCES `post_comments`(`id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
     ");
 

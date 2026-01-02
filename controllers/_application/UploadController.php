@@ -63,12 +63,14 @@ if (!move_uploaded_file($file['tmp_name'], $destPath)) {
     echo json_encode(["status" => "error", "message" => "Không thể lưu file"]);
     exit;
 }
-
-$url = '/public/media/' . $filename;
+$path = '/public/media/' . $filename;
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$origin = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME']);
+$url = $origin . $path;
 
 echo json_encode([
     "status" => "success",
     "message" => "Upload thành công",
     "url" => $url,
+    "path" => $path
 ]);
-
