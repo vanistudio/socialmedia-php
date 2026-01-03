@@ -105,6 +105,7 @@ if (!empty($_SESSION['email'])) {
             type: "LOGIN",
             login_identifier: $("#login_identifier").val(),
             password: $("#password").val(),
+            csrf_token: window.CSRF_TOKEN || '',
         };
 
         $.post(

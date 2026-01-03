@@ -264,6 +264,7 @@ $(document).ready(function() {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('target', target);
+        formData.append('csrf_token', window.CSRF_TOKEN || '');
         $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed').text('Đang tải...');
         $.ajax({
             url: '/api/controller/upload',

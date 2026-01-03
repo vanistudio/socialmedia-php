@@ -94,6 +94,7 @@
                 let mediaUploadPromises = dialogPostMediaFiles.map(file => {
                     const formData = new FormData();
                     formData.append('file', file);
+                    formData.append('csrf_token', window.CSRF_TOKEN || '');
                     return $.ajax({
                         url: '/api/controller/upload',
                         type: 'POST',

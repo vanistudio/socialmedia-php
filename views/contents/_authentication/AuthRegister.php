@@ -147,6 +147,7 @@ if (!empty($_SESSION['email'])) {
             password: $("#password").val(),
             re_password: $("#re_password").val(),
             terms: $("#terms").is(":checked"),
+            csrf_token: window.CSRF_TOKEN || '',
         };
 
         $.post(

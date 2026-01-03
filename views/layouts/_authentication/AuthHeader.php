@@ -18,6 +18,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Signika:wght@300..700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        window.CSRF_TOKEN = '<?php echo get_csrf_token(); ?>';
+    </script>
 </head>
 
 <body class="bg-background text-foreground font-sans antialiased">

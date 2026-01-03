@@ -18,6 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_error('Yêu cầu không hợp lệ');
 }
 
+// CSRF Protection
+$csrfToken = $_POST['csrf_token'] ?? '';
+if (!validate_csrf_token($csrfToken)) {
+    json_error('CSRF token không hợp lệ');
+}
+
 $type = $_POST['type'] ?? '';
 
 $authRequiredTypes = [
@@ -258,11 +264,8 @@ if ($type === 'GET_POST') {
     $uid = isset($currentUser) ? intval($currentUser['id']) : 0;
     $postOwnerId = intval($post['user_id']);
     $visibility = $post['visibility'] ?? 'public';
-    
-    // Check permission: owner can always view, others can view public posts
     if ($uid !== $postOwnerId) {
         if ($visibility !== 'public') {
-            // Check if user is following (for followers visibility)
             if ($visibility === 'followers' && $uid > 0) {
                 $isFollowing = $Vani->get_row("SELECT id FROM `follows` WHERE `follower_id` = '$uid' AND `following_id` = '$postOwnerId'");
                 if (!$isFollowing) {
@@ -272,8 +275,6 @@ if ($type === 'GET_POST') {
                 json_error('Bạn không có quyền xem bài viết này');
             }
         }
-        
-        // Check if user is blocked
         if ($uid > 0) {
             $isBlocked = $Vani->get_row("SELECT id FROM `user_blocks` WHERE (`blocker_id` = '$uid' AND `blocked_id` = '$postOwnerId') OR (`blocker_id` = '$postOwnerId' AND `blocked_id` = '$uid')");
             if ($isBlocked) {
@@ -281,10 +282,8 @@ if ($type === 'GET_POST') {
             }
         }
     }
-    
     $media = $Vani->get_list("SELECT media_url FROM `post_media` WHERE `post_id` = '$post_id' ORDER BY `sort_order` ASC");
     $mediaUrls = array_column($media, 'media_url');
-    
     json_success('Lấy bài viết thành công', [
         'post' => [
             'id' => intval($post['id']),
@@ -294,7 +293,6 @@ if ($type === 'GET_POST') {
         ]
     ]);
 }
-
 if ($type === 'TOGGLE_LIKE') {
     $post_id = intval($_POST['post_id'] ?? 0);
     if ($post_id <= 0) json_error('post_id không hợp lệ');
@@ -310,8 +308,6 @@ if ($type === 'TOGGLE_LIKE') {
             'post_id' => $post_id,
             'user_id' => $uid,
         ]);
-        
-        // Tạo notification cho chủ bài viết
         $post = $Vani->get_row("SELECT user_id FROM `posts` WHERE `id` = '$post_id'");
         if ($post && intval($post['user_id']) !== $uid) {
             $Vani->insert("notifications", [
@@ -356,13 +352,9 @@ if ($type === 'ADD_COMMENT') {
 
     $commentId = $Vani->insert('post_comments', $commentData);
     if (!$commentId) json_error('Không thể bình luận');
-
-    // Tạo notification
     $postOwnerId = intval($post['user_id']);
     $commenterId = intval($currentUser['id']);
-    
     if ($parent_id > 0) {
-        // Reply to comment - notify comment owner
         $parentComment = $Vani->get_row("SELECT user_id FROM `post_comments` WHERE `id` = '$parent_id'");
         if ($parentComment && intval($parentComment['user_id']) !== $commenterId) {
             $Vani->insert("notifications", [
@@ -374,8 +366,6 @@ if ($type === 'ADD_COMMENT') {
             ]);
         }
     }
-    
-    // Notify post owner (if not the commenter and not already notified for reply)
     if ($postOwnerId !== $commenterId && ($parent_id <= 0 || intval($parentComment['user_id']) !== $postOwnerId)) {
         $Vani->insert("notifications", [
             'user_id' => $postOwnerId,
@@ -385,7 +375,6 @@ if ($type === 'ADD_COMMENT') {
             'entity_id' => $post_id
         ]);
     }
-
     json_success('Bình luận thành công', ['comment_id' => intval($commentId)]);
 }
 if ($type === 'TOGGLE_COMMENT_LIKE') {
@@ -720,8 +709,6 @@ if ($type === 'TOGGLE_FOLLOW') {
             'following_id' => $targetUserId
         ]);
         $isFollowing = true;
-        
-        // Tạo notification
         $Vani->insert("notifications", [
             'user_id' => $targetUserId,
             'actor_id' => $uid,
@@ -800,8 +787,6 @@ if ($type === 'TOGGLE_BLOCK') {
             'blocked_id' => $targetUserId
         ]);
         $isBlocked = true;
-        
-        // Xóa follow nếu có
         $Vani->remove("follows", "`follower_id` = '$uid' AND `following_id` = '$targetUserId'");
         $Vani->remove("follows", "`follower_id` = '$targetUserId' AND `following_id` = '$uid'");
     }

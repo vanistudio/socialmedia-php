@@ -1,6 +1,13 @@
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
 require $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CSRF Protection
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!validate_csrf_token($csrfToken)) {
+        die(json_encode(["status" => "error", "message" => "CSRF token không hợp lệ"]));
+    }
+    
     if ($_POST['type'] == "LOGIN") {
         $identifier = check_string($_POST['login_identifier']);
         $password = check_string($_POST['password']);

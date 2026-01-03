@@ -48,6 +48,55 @@
     } else {
         initTheme();
     }
+
+    // CSRF Protection - Auto-add CSRF token to all AJAX requests
+    if (typeof jQuery !== 'undefined') {
+        // Override jQuery.post to automatically include CSRF token
+        const originalPost = jQuery.post;
+        jQuery.post = function(url, data, success, dataType) {
+            if (typeof data === 'object' && data !== null && !(data instanceof FormData)) {
+                data.csrf_token = window.CSRF_TOKEN || '';
+            } else if (typeof data === 'string') {
+                // If data is a string, parse it and add CSRF token
+                try {
+                    const params = new URLSearchParams(data);
+                    params.append('csrf_token', window.CSRF_TOKEN || '');
+                    data = params.toString();
+                } catch (e) {
+                    // If parsing fails, append as string
+                    data += (data.includes('?') ? '&' : '?') + 'csrf_token=' + encodeURIComponent(window.CSRF_TOKEN || '');
+                }
+            }
+            return originalPost.call(this, url, data, success, dataType);
+        };
+
+        // Override jQuery.ajax to automatically include CSRF token
+        const originalAjax = jQuery.ajax;
+        jQuery.ajax = function(options) {
+            if (options && options.data) {
+                if (typeof options.data === 'object' && !(options.data instanceof FormData)) {
+                    options.data.csrf_token = window.CSRF_TOKEN || '';
+                } else if (typeof options.data === 'string') {
+                    try {
+                        const params = new URLSearchParams(options.data);
+                        params.append('csrf_token', window.CSRF_TOKEN || '');
+                        options.data = params.toString();
+                    } catch (e) {
+                        options.data += (options.data.includes('?') ? '&' : '?') + 'csrf_token=' + encodeURIComponent(window.CSRF_TOKEN || '');
+                    }
+                }
+            }
+            return originalAjax.call(this, options);
+        };
+
+        // Auto-add CSRF token to all forms on submit
+        jQuery(document).on('submit', 'form', function(e) {
+            const $form = jQuery(this);
+            if ($form.find('input[name="csrf_token"]').length === 0) {
+                $form.append('<input type="hidden" name="csrf_token" value="' + (window.CSRF_TOKEN || '') + '">');
+            }
+        });
+    }
     window.toggleTheme = toggleTheme;
     document.addEventListener('click', function (e) {
         const themeToggle = e.target.closest('#theme-toggle');
