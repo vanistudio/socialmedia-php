@@ -39,7 +39,7 @@ $__isRegisterActive = isActivePath('/register', $__currentPath);
             <div class="h-8 w-8 rounded-lg bg-vanixjnk/15 flex items-center justify-center">
                 <iconify-icon icon="solar:chat-round-like-linear" class="text-vanixjnk" width="20"></iconify-icon>
             </div>
-            <span class="hidden sm:inline">Vanix Social</span>
+            <span class="hidden sm:inline">Vani Social</span>
         </a>
         <div class="hidden md:flex flex-1 max-w-lg mx-8">
             <div class="relative w-full">

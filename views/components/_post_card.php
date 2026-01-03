@@ -84,7 +84,7 @@
             <iconify-icon icon="solar:chat-dots-linear" width="20"></iconify-icon>
             <span class="text-sm font-medium comment-count"><?php echo $post['comment_count']; ?></span>
         </button>
-        <button type="button" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-accent transition text-muted-foreground" onclick="toast.info('Đang phát triển')">
+        <button type="button" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-accent transition text-muted-foreground" onclick="sharePost(<?php echo $post['id']; ?>, '<?php echo htmlspecialchars(addslashes($post['full_name'])); ?>', '<?php echo htmlspecialchars(addslashes(mb_substr($post['content'] ?? '', 0, 100))); ?>')">
             <iconify-icon icon="solar:share-linear" width="20"></iconify-icon>
             <span class="text-sm font-medium">Chia sẻ</span>
         </button>

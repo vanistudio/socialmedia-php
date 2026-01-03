@@ -4,7 +4,7 @@
             <div class="h-8 w-8 rounded-lg bg-vanixjnk/15 flex items-center justify-center">
                 <iconify-icon icon="solar:chat-round-like-linear" class="text-vanixjnk" width="20"></iconify-icon>
             </div>
-            <span class="hidden sm:inline">Vanix Social</span>
+            <span class="hidden sm:inline">Vani Social</span>
         </a>
         <div class="flex items-center gap-2">
             <a href="/" class="h-10 px-3 rounded-lg border border-input bg-card hover:bg-accent transition text-sm font-medium flex items-center gap-2">

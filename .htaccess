@@ -23,6 +23,7 @@ RewriteRule ^logout$ views/contents/_authentication/AuthLogout.php [L]
 RewriteRule ^api/controller/auth$ controllers/_authentication/AuthController.php [L]
 RewriteRule ^api/controller/app$ controllers/_application/AppController.php [L]
 RewriteRule ^api/controller/upload$ controllers/_application/UploadController.php [L]
+RewriteRule ^api/controller/admin$ controllers/_administrator/AdController.php [L]
 
 # Profile page: /u/{username}
 RewriteRule ^u/([^/]+)$ views/contents/_application/AppProfile.php?username=$1 [L,QSA]
@@ -41,3 +42,30 @@ RewriteRule ^notifications$ views/contents/_application/AppNotifications.php [L]
 
 # Explore page: /explore
 RewriteRule ^explore$ views/contents/_application/AppExplore.php [L]
+
+# Forgot password page: /forgot-password
+RewriteRule ^forgot-password$ views/contents/_authentication/AuthForgotPassword.php [L]
+
+# Static pages
+RewriteRule ^terms$ views/contents/_application/AppTerms.php [L]
+RewriteRule ^privacy$ views/contents/_application/AppPrivacy.php [L]
+RewriteRule ^about$ views/contents/_application/AppAbout.php [L]
+
+# ==================== ADMIN ROUTES ====================
+# Admin dashboard: /admin
+RewriteRule ^admin$ views/contents/_administrator/AdDashboard.php [L]
+
+# Admin moderation: /admin/moderation
+RewriteRule ^admin/moderation$ views/contents/_administrator/AdModeration.php [L]
+
+# Admin blacklist: /admin/blacklist
+RewriteRule ^admin/blacklist$ views/contents/_administrator/AdBlacklist.php [L]
+
+# Admin reports: /admin/reports
+RewriteRule ^admin/reports$ views/contents/_administrator/AdReports.php [L]
+
+# Admin users: /admin/users
+RewriteRule ^admin/users$ views/contents/_administrator/AdUsers.php [L]
+
+# Admin settings: /admin/settings
+RewriteRule ^admin/settings$ views/contents/_administrator/AdSettings.php [L]

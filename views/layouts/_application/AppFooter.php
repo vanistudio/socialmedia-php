@@ -8,7 +8,7 @@
                     <div class="h-7 w-7 rounded-lg bg-vanixjnk/15 flex items-center justify-center">
                         <iconify-icon icon="solar:chat-round-like-linear" class="text-vanixjnk" width="18"></iconify-icon>
                     </div>
-                    <span>© <?php echo date('Y'); ?> Vanix Social</span>
+                    <span>© <?php echo date('Y'); ?> Vani Social</span>
                 </div>
 
                 <div class="flex items-center gap-4">
@@ -33,6 +33,7 @@
 
                 <form id="dialog-create-post-form" class="p-4">
                     <input type="hidden" name="type" value="CREATE_POST">
+                    <input type="hidden" name="visibility" id="dialog-post-visibility" value="public">
                     <div class="flex items-start gap-4">
                         <img src="<?php echo htmlspecialchars($currentUser['avatar'] ?? 'https://placehold.co/200x200'); ?>" alt="Avatar" class="h-10 w-10 rounded-full object-cover">
                         <div class="flex-1">
@@ -41,11 +42,50 @@
                         </div>
                     </div>
                     <div class="flex justify-between items-center mt-4 pt-4 border-t border-border">
-                        <div class="flex gap-1 text-muted-foreground">
+                        <div class="flex items-center gap-2 text-muted-foreground">
                             <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent hover:text-vanixjnk transition flex items-center justify-center" aria-label="Add media" onclick="$('#dialog-post-media-upload').click()">
                                 <iconify-icon icon="solar:gallery-wide-linear" width="20"></iconify-icon>
                             </button>
                             <input type="file" id="dialog-post-media-upload" accept="image/*,video/*" class="hidden" multiple>
+                            
+                            <div class="relative" id="dialog-visibility-dropdown-container">
+                                <button type="button" id="dialog-visibility-trigger" class="h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent transition flex items-center gap-2 text-sm">
+                                    <iconify-icon id="dialog-visibility-icon" icon="solar:earth-linear" width="16"></iconify-icon>
+                                    <span id="dialog-visibility-text">Công khai</span>
+                                    <iconify-icon icon="solar:alt-arrow-down-linear" width="14" class="text-muted-foreground"></iconify-icon>
+                                </button>
+                                <div id="dialog-visibility-dropdown" class="hidden absolute bottom-full left-0 mb-2 w-48 bg-card border border-border rounded-xl shadow-lg z-50">
+                                    <ul class="py-1">
+                                        <li>
+                                            <button type="button" data-dialog-visibility="public" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                <iconify-icon icon="solar:earth-linear" width="18"></iconify-icon>
+                                                <div>
+                                                    <span class="font-medium">Công khai</span>
+                                                    <p class="text-xs text-muted-foreground">Mọi người có thể xem</p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" data-dialog-visibility="followers" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                <iconify-icon icon="solar:users-group-rounded-linear" width="18"></iconify-icon>
+                                                <div>
+                                                    <span class="font-medium">Người theo dõi</span>
+                                                    <p class="text-xs text-muted-foreground">Chỉ người theo dõi</p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" data-dialog-visibility="private" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                <iconify-icon icon="solar:lock-linear" width="18"></iconify-icon>
+                                                <div>
+                                                    <span class="font-medium">Riêng tư</span>
+                                                    <p class="text-xs text-muted-foreground">Chỉ mình tôi</p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="h-9 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium">Đăng bài</button>
                     </div>
@@ -58,10 +98,46 @@
         $(document).ready(function() {
             const createPostDialog = window.initDialog ? window.initDialog('create-post-dialog') : null;
             let dialogPostMediaFiles = [];
+
+            // Dialog visibility dropdown
+            $('#dialog-visibility-trigger').on('click', function(e) {
+                e.stopPropagation();
+                $('#dialog-visibility-dropdown').toggleClass('hidden');
+            });
+
+            $('[data-dialog-visibility]').on('click', function() {
+                const visibility = $(this).data('dialog-visibility');
+                $('#dialog-post-visibility').val(visibility);
+                
+                const icons = {
+                    'public': 'solar:earth-linear',
+                    'followers': 'solar:users-group-rounded-linear',
+                    'private': 'solar:lock-linear'
+                };
+                const texts = {
+                    'public': 'Công khai',
+                    'followers': 'Người theo dõi',
+                    'private': 'Riêng tư'
+                };
+                
+                $('#dialog-visibility-icon').attr('icon', icons[visibility]);
+                $('#dialog-visibility-text').text(texts[visibility]);
+                $('#dialog-visibility-dropdown').addClass('hidden');
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#dialog-visibility-dropdown-container').length) {
+                    $('#dialog-visibility-dropdown').addClass('hidden');
+                }
+            });
+
             $(document).on('click', '[data-action="open-create-post-dialog"]', function() {
                 if (createPostDialog) {
                     $('#dialog-create-post-form')[0].reset();
                     $('#dialog-post-media-previews').empty();
+                    $('#dialog-post-visibility').val('public');
+                    $('#dialog-visibility-icon').attr('icon', 'solar:earth-linear');
+                    $('#dialog-visibility-text').text('Công khai');
                     dialogPostMediaFiles = [];
                     createPostDialog.open();
                 }
@@ -153,6 +229,57 @@
                 });
             });
         });
+
+        // Share post function
+        window.sharePost = function(postId, authorName, content) {
+            const url = `${window.location.origin}/post/${postId}`;
+            const title = `Bài viết của ${authorName}`;
+            const text = content || 'Xem bài viết này trên Vani Social';
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: url
+                }).then(() => {
+                    toast.success('Đã chia sẻ thành công');
+                }).catch((err) => {
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard(url);
+                    }
+                });
+            } else {
+                copyToClipboard(url);
+            }
+        };
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    toast.success('Đã copy link bài viết');
+                }).catch(() => {
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+
+        function fallbackCopyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                toast.success('Đã copy link bài viết');
+            } catch (err) {
+                toast.error('Không thể copy link');
+            }
+            document.body.removeChild(textarea);
+        }
 
         function loadUnreadMessagesCount() {
             <?php if (isset($_SESSION['email']) && !empty($_SESSION['email'])): ?>

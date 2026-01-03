@@ -60,6 +60,24 @@ $media = $Vani->get_list("SELECT * FROM `post_media` WHERE `post_id` = '$postId'
                 </button>
                 <div id="post-menu-<?php echo $post['id']; ?>" class="dropdown-menu hidden fixed w-56 bg-card border border-border rounded-xl shadow-lg z-50" data-state="closed">
                     <ul class="py-1">
+                        <?php 
+                        $isPostOwner = $currentUserId > 0 && intval($post['user_id']) === $currentUserId;
+                        ?>
+                        <?php if ($isPostOwner): ?>
+                        <li>
+                            <button type="button" data-action="edit-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent">
+                                <iconify-icon icon="solar:pen-linear" width="16"></iconify-icon>
+                                <span>Chỉnh sửa bài viết</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" data-action="delete-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
+                                <iconify-icon icon="solar:trash-bin-trash-linear" width="16"></iconify-icon>
+                                <span>Xóa bài viết</span>
+                            </button>
+                        </li>
+                        <hr class="my-1 border-border">
+                        <?php endif; ?>
                         <li>
                             <button type="button" data-action="copy-link" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent">
                                 <iconify-icon icon="solar:link-linear" width="16"></iconify-icon><span>Copy link</span>
@@ -70,12 +88,14 @@ $media = $Vani->get_list("SELECT * FROM `post_media` WHERE `post_id` = '$postId'
                                 <iconify-icon icon="solar:bookmark-linear" width="16"></iconify-icon><span><?php echo $post['has_saved'] > 0 ? 'Bỏ lưu' : 'Lưu bài viết'; ?></span>
                             </button>
                         </li>
+                        <?php if (!$isPostOwner): ?>
                         <hr class="my-1 border-border">
                         <li>
                             <button type="button" data-action="report-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
                                 <iconify-icon icon="solar:danger-triangle-linear" width="16"></iconify-icon><span>Báo cáo</span>
                             </button>
                         </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>
@@ -226,37 +246,37 @@ $media = $Vani->get_list("SELECT * FROM `post_media` WHERE `post_id` = '$postId'
                             <div class="max-h-[200px] overflow-y-auto scrollbar-thin p-1">
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Spam" data-label="Spam" data-state="checked">
                                     <span class="truncate">Spam</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Nội dung không phù hợp" data-label="Nội dung không phù hợp" data-state="unchecked">
                                     <span class="truncate">Nội dung không phù hợp</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Quấy rối" data-label="Quấy rối" data-state="unchecked">
                                     <span class="truncate">Quấy rối</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Lừa đảo" data-label="Lừa đảo" data-state="unchecked">
                                     <span class="truncate">Lừa đảo</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Bạo lực" data-label="Bạo lực" data-state="unchecked">
                                     <span class="truncate">Bạo lực</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Other" data-label="Khác" data-state="unchecked">
                                     <span class="truncate">Khác</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
@@ -391,12 +411,44 @@ $(document).ready(function() {
         const commentId = $(this).data('comment-id');
         const $self = $(this);
 
-        if (!currentUserId && ['toggle-like','save-post','report-post','reply-comment','toggle-comment-like','delete-comment'].includes(action)) {
+        if (!currentUserId && ['toggle-like','save-post','report-post','reply-comment','toggle-comment-like','delete-comment','edit-post','delete-post'].includes(action)) {
             toast.error('Vui lòng đăng nhập để thực hiện');
             return;
         }
 
         switch (action) {
+            case 'edit-post':
+                // Load post data and open edit dialog
+                $.post('/api/controller/app', { type: 'GET_POST', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
+                    if (data.status === 'success' && data.post) {
+                        const post = data.post;
+                        $('#edit-post-id').val(postId);
+                        $('#edit-post-content').val(post.content || '');
+                        editPostMediaUrls = post.media || [];
+                        renderEditPostMedia();
+                        openEditPostDialog();
+                    } else {
+                        toast.error(data.message || 'Không thể tải bài viết');
+                    }
+                }, 'json').fail(function() {
+                    toast.error('Không thể kết nối tới máy chủ');
+                });
+                break;
+
+            case 'delete-post':
+                if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
+                $.post('/api/controller/app', { type: 'DELETE_POST', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
+                    if (data.status === 'success') {
+                        toast.success(data.message);
+                        setTimeout(() => window.location.href = '/', 500);
+                    } else {
+                        toast.error(data.message || 'Có lỗi xảy ra');
+                    }
+                }, 'json').fail(function() {
+                    toast.error('Không thể kết nối tới máy chủ');
+                });
+                break;
+
             case 'toggle-like':
                 $.post('/api/controller/app', { type: 'TOGGLE_LIKE', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success') {
@@ -507,6 +559,143 @@ $(document).ready(function() {
         });
     });
 });
+
+// Edit post dialog functionality
+let editPostDialog = null;
+let editPostMediaUrls = [];
+
+$(document).ready(function() {
+    if (window.initDialog) {
+        editPostDialog = window.initDialog('edit-post-dialog');
+    }
+
+    $('#edit-post-media-upload').on('change', function(e) {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('csrf_token', window.CSRF_TOKEN || '');
+            $.ajax({
+                url: '/api/controller/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data && data.status === 'success' && data.url) {
+                        editPostMediaUrls.push(data.url);
+                        renderEditPostMedia();
+                    }
+                }
+            });
+        });
+    });
+
+    $('#edit-post-form').on('submit', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('button[type=submit]');
+        const originalBtnText = $btn.text();
+        const content = $form.find('textarea[name=content]').val();
+        
+        if (content.trim() === '' && editPostMediaUrls.length === 0) {
+            toast.error('Bài viết không được để trống');
+            return;
+        }
+        
+        $btn.prop('disabled', true).addClass('opacity-70').text('Đang cập nhật...');
+        
+        let postDataArray = $form.serializeArray();
+        editPostMediaUrls.forEach(function(url) {
+            postDataArray.push({ name: 'media[]', value: url });
+        });
+        postDataArray.push({ name: 'csrf_token', value: window.CSRF_TOKEN || '' });
+        
+        $.post('/api/controller/app', $.param(postDataArray), function(data) {
+            if (data && data.status === 'success') {
+                toast.success(data.message);
+                closeEditPostDialog();
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(function() {
+            toast.error('Không thể kết nối');
+        }).always(function() {
+            $btn.prop('disabled', false).removeClass('opacity-70').text(originalBtnText);
+        });
+    });
+});
+
+function renderEditPostMedia() {
+    const previews = $('#edit-post-media-previews');
+    previews.empty();
+    editPostMediaUrls.forEach((url, index) => {
+        previews.append(`
+            <div class="relative">
+                <img src="${url}" class="h-24 w-full object-cover rounded-lg">
+                <button type="button" class="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive text-white flex items-center justify-center" onclick="removeEditMedia(${index})">
+                    <iconify-icon icon="solar:close-circle-linear" width="14"></iconify-icon>
+                </button>
+            </div>
+        `);
+    });
+}
+
+function removeEditMedia(index) {
+    editPostMediaUrls.splice(index, 1);
+    renderEditPostMedia();
+}
+
+function openEditPostDialog() {
+    if (editPostDialog) {
+        editPostDialog.open();
+    } else {
+        $('#edit-post-dialog').removeClass('hidden').addClass('flex');
+    }
+}
+
+function closeEditPostDialog() {
+    if (editPostDialog) {
+        editPostDialog.close();
+    } else {
+        $('#edit-post-dialog').addClass('hidden').removeClass('flex');
+    }
+}
 </script>
+
+<!-- Edit Post Dialog -->
+<div id="edit-post-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog data-state="closed">
+    <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
+    <div class="relative w-full max-w-xl mx-auto" data-dialog-content>
+        <div class="bg-card border border-border rounded-2xl shadow-lg" data-dialog-inner>
+            <div class="flex items-center justify-between p-4 border-b border-border">
+                <h3 class="text-lg font-semibold text-foreground">Chỉnh sửa bài viết</h3>
+                <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent transition flex items-center justify-center" onclick="closeEditPostDialog()">
+                    <iconify-icon icon="solar:close-circle-linear" width="22"></iconify-icon>
+                </button>
+            </div>
+            <form id="edit-post-form" class="p-4">
+                <input type="hidden" name="type" value="UPDATE_POST">
+                <input type="hidden" name="post_id" id="edit-post-id">
+                <div class="space-y-4">
+                    <div>
+                        <textarea name="content" id="edit-post-content" placeholder="Bạn đang nghĩ gì?" class="w-full bg-transparent text-foreground placeholder:text-muted-foreground outline-none resize-none text-lg min-h-[120px] border border-input rounded-lg p-3"></textarea>
+                        <div id="edit-post-media-previews" class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-4 border-t border-border">
+                        <div class="flex gap-1 text-muted-foreground">
+                            <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent hover:text-vanixjnk transition flex items-center justify-center" aria-label="Add media" onclick="$('#edit-post-media-upload').click()">
+                                <iconify-icon icon="solar:gallery-wide-linear" width="20"></iconify-icon>
+                            </button>
+                            <input type="file" id="edit-post-media-upload" accept="image/*,video/*" class="hidden" multiple>
+                        </div>
+                        <button type="submit" class="h-9 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium">Cập nhật</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppFooter.php'; ?>

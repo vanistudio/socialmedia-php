@@ -319,7 +319,7 @@ try {
     ");
 
     $defaultSettings = [
-        ['key' => 'siteTitle', 'value' => 'Vanix Social', 'type' => 'string'],
+        ['key' => 'siteTitle', 'value' => 'Vani Social', 'type' => 'string'],
         ['key' => 'siteDescription', 'value' => 'Mạng xã hội hiện đại với giao diện shadcn/radix, Tailwind CSS và màu chủ đạo vanixjnk.', 'type' => 'string'],
         ['key' => 'siteColor', 'value' => '#c176ff', 'type' => 'color'],
         ['key' => 'siteTheme', 'value' => 'light', 'type' => 'string'],

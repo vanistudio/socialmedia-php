@@ -129,7 +129,35 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
             </div>
         </div>
         <div class="mt-6 space-y-4">
+            <?php if (!empty($profileUser['bio'])): ?>
             <p class="text-sm text-muted-foreground max-w-2xl text-center sm:text-left"><?php echo htmlspecialchars($profileUser['bio']); ?></p>
+            <?php endif; ?>
+            
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
+                <?php if (!empty($profileUser['location'])): ?>
+                <div class="flex items-center gap-1">
+                    <iconify-icon icon="solar:map-point-linear" width="16"></iconify-icon>
+                    <span><?php echo htmlspecialchars($profileUser['location']); ?></span>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($profileUser['website'])): ?>
+                <div class="flex items-center gap-1">
+                    <iconify-icon icon="solar:link-linear" width="16"></iconify-icon>
+                    <a href="<?php echo htmlspecialchars($profileUser['website']); ?>" target="_blank" rel="noopener noreferrer" class="text-vanixjnk hover:underline"><?php echo htmlspecialchars(preg_replace('/^https?:\/\//', '', $profileUser['website'])); ?></a>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($profileUser['birthday'])): ?>
+                <div class="flex items-center gap-1">
+                    <iconify-icon icon="solar:cake-linear" width="16"></iconify-icon>
+                    <span><?php echo date('d/m/Y', strtotime($profileUser['birthday'])); ?></span>
+                </div>
+                <?php endif; ?>
+                <div class="flex items-center gap-1">
+                    <iconify-icon icon="solar:calendar-linear" width="16"></iconify-icon>
+                    <span>Tham gia <?php echo date('m/Y', strtotime($profileUser['created_at'])); ?></span>
+                </div>
+            </div>
+
             <div class="flex items-center justify-center sm:justify-start gap-6 text-sm">
                 <div class="text-center sm:text-left"><span class="font-bold text-foreground"><?php echo $stats['posts']; ?></span><span class="text-muted-foreground"> bài viết</span></div>
                 <button type="button" class="text-center sm:text-left hover:underline" data-action="view-followers" data-user-id="<?php echo $profileUserId; ?>">
@@ -219,37 +247,37 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                             <div class="max-h-[200px] overflow-y-auto scrollbar-thin p-1">
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Spam" data-label="Spam" data-state="checked">
                                     <span class="truncate">Spam</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Nội dung không phù hợp" data-label="Nội dung không phù hợp" data-state="unchecked">
                                     <span class="truncate">Nội dung không phù hợp</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Quấy rối" data-label="Quấy rối" data-state="unchecked">
                                     <span class="truncate">Quấy rối</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Lừa đảo" data-label="Lừa đảo" data-state="unchecked">
                                     <span class="truncate">Lừa đảo</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Bạo lực" data-label="Bạo lực" data-state="unchecked">
                                     <span class="truncate">Bạo lực</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Other" data-label="Khác" data-state="unchecked">
                                     <span class="truncate">Khác</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>

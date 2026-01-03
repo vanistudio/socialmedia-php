@@ -495,8 +495,20 @@ window.vanixjnkdev = {
             }
 
             if (initialSelected) {
-                options.forEach(opt => opt.dataset.state = 'unchecked');
+                options.forEach(opt => {
+                    opt.dataset.state = 'unchecked';
+                    const checkIcon = opt.querySelector('.check-icon');
+                    if (checkIcon) {
+                        checkIcon.classList.remove('opacity-100');
+                        checkIcon.classList.add('opacity-0');
+                    }
+                });
                 initialSelected.dataset.state = 'checked';
+                const selectedCheckIcon = initialSelected.querySelector('.check-icon');
+                if (selectedCheckIcon) {
+                    selectedCheckIcon.classList.remove('opacity-0');
+                    selectedCheckIcon.classList.add('opacity-100');
+                }
                 if (input) input.value = initialSelected.dataset.value;
                 if (selectedText) selectedText.textContent = initialSelected.dataset.label || initialSelected.textContent.trim();
             }
@@ -522,8 +534,20 @@ window.vanixjnkdev = {
                     const label = this.dataset.label || this.textContent.trim();
                     if (input) input.value = value;
                     if (selectedText) selectedText.textContent = label;
-                    options.forEach(opt => opt.dataset.state = 'unchecked');
+                    options.forEach(opt => {
+                        opt.dataset.state = 'unchecked';
+                        const checkIcon = opt.querySelector('.check-icon');
+                        if (checkIcon) {
+                            checkIcon.classList.remove('opacity-100');
+                            checkIcon.classList.add('opacity-0');
+                        }
+                    });
                     this.dataset.state = 'checked';
+                    const currentCheckIcon = this.querySelector('.check-icon');
+                    if (currentCheckIcon) {
+                        currentCheckIcon.classList.remove('opacity-0');
+                        currentCheckIcon.classList.add('opacity-100');
+                    }
                     if (input) {
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                     }
@@ -539,9 +563,27 @@ window.vanixjnkdev = {
 
         function openSelect(container) {
             const content = container.querySelector('.custom-select-content');
+            const trigger = container.querySelector('.custom-select-trigger');
             const chevron = container.querySelector('.fa-chevron-down') || container.querySelector('.chevron-icon');
 
             content.classList.remove('hidden');
+            
+            // Use fixed positioning to escape overflow:hidden containers
+            const rect = trigger.getBoundingClientRect();
+            content.style.position = 'fixed';
+            content.style.top = (rect.bottom + 4) + 'px';
+            content.style.left = rect.left + 'px';
+            content.style.width = rect.width + 'px';
+            content.style.maxHeight = '200px';
+            
+            // Check if dropdown would go off-screen bottom
+            const dropdownHeight = content.scrollHeight;
+            const viewportHeight = window.innerHeight;
+            if (rect.bottom + dropdownHeight + 8 > viewportHeight) {
+                // Position above the trigger instead
+                content.style.top = (rect.top - dropdownHeight - 4) + 'px';
+            }
+            
             requestAnimationFrame(() => {
                 content.dataset.state = 'open';
                 if (chevron) chevron.style.transform = 'rotate(180deg)';
@@ -555,6 +597,11 @@ window.vanixjnkdev = {
             setTimeout(() => {
                 if (content.dataset.state === 'closed') {
                     content.classList.add('hidden');
+                    // Reset positioning styles
+                    content.style.position = '';
+                    content.style.top = '';
+                    content.style.left = '';
+                    content.style.width = '';
                 }
             }, 100);
         }
@@ -566,6 +613,52 @@ window.vanixjnkdev = {
         initCustomSelects();
     }
     window.initCustomSelects = initCustomSelects;
+
+    // Close all selects on scroll (since we use fixed positioning)
+    let scrollTimer;
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(function() {
+            document.querySelectorAll('.custom-select-content[data-state="open"]').forEach(content => {
+                const container = content.closest('.custom-select-container');
+                if (container) {
+                    const chevron = container.querySelector('.fa-chevron-down') || container.querySelector('.chevron-icon');
+                    content.dataset.state = 'closed';
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                    setTimeout(() => {
+                        if (content.dataset.state === 'closed') {
+                            content.classList.add('hidden');
+                            content.style.position = '';
+                            content.style.top = '';
+                            content.style.left = '';
+                            content.style.width = '';
+                        }
+                    }, 100);
+                }
+            });
+        }, 50);
+    }, true);
+
+    // Close all selects on resize
+    window.addEventListener('resize', function() {
+        document.querySelectorAll('.custom-select-content[data-state="open"]').forEach(content => {
+            const container = content.closest('.custom-select-container');
+            if (container) {
+                const chevron = container.querySelector('.fa-chevron-down') || container.querySelector('.chevron-icon');
+                content.dataset.state = 'closed';
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+                setTimeout(() => {
+                    if (content.dataset.state === 'closed') {
+                        content.classList.add('hidden');
+                        content.style.position = '';
+                        content.style.top = '';
+                        content.style.left = '';
+                        content.style.width = '';
+                    }
+                }, 100);
+            }
+        });
+    });
 
 })();
 

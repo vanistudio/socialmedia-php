@@ -67,6 +67,32 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                         <textarea id="bio" name="bio" rows="3" placeholder="Giới thiệu ngắn về bạn..." class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"><?php echo htmlspecialchars($user['bio'] ?? ''); ?></textarea>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label for="location" class="text-sm font-medium text-foreground">Vị trí</label>
+                            <div class="relative">
+                                <iconify-icon icon="solar:map-point-linear" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" width="18"></iconify-icon>
+                                <input type="text" id="location" name="location" value="<?php echo htmlspecialchars($user['location'] ?? ''); ?>" placeholder="TP. Hồ Chí Minh, Việt Nam" class="w-full h-10 pl-10 pr-3 rounded-lg border border-input bg-background text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="website" class="text-sm font-medium text-foreground">Website</label>
+                            <div class="relative">
+                                <iconify-icon icon="solar:link-linear" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" width="18"></iconify-icon>
+                                <input type="url" id="website" name="website" value="<?php echo htmlspecialchars($user['website'] ?? ''); ?>" placeholder="https://yourwebsite.com" class="w-full h-10 pl-10 pr-3 rounded-lg border border-input bg-background text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="birthday" class="text-sm font-medium text-foreground">Ngày sinh</label>
+                        <div class="relative">
+                            <iconify-icon icon="solar:calendar-linear" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" width="18"></iconify-icon>
+                            <input type="date" id="birthday" name="birthday" value="<?php echo htmlspecialchars($user['birthday'] ?? ''); ?>" class="w-full h-10 pl-10 pr-3 rounded-lg border border-input bg-background text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30">
+                        </div>
+                        <p class="text-xs text-muted-foreground">Ngày sinh của bạn sẽ được hiển thị trên trang cá nhân.</p>
+                    </div>
+
                     <div class="flex items-center gap-3">
                         <button type="submit" class="h-10 px-5 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium flex items-center gap-2">
                             <iconify-icon icon="solar:diskette-linear" width="18"></iconify-icon>

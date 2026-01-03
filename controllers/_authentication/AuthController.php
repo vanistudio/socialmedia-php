@@ -75,6 +75,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
     }
+    if ($_POST['type'] == "FORGOT_PASSWORD") {
+        $email = check_string($_POST['email'] ?? '');
+        
+        if (empty($email)) {
+            die(json_encode(["status" => "error", "message" => "Vui lòng nhập email"]));
+        }
+        
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            die(json_encode(["status" => "error", "message" => "Email không hợp lệ"]));
+        }
+        
+        // Check if email exists (but don't reveal this to user for security)
+        $user = $Vani->get_row("SELECT * FROM `users` WHERE `email` = '$email'");
+        
+        // In a real application, you would send an email with a reset link here
+        // For now, we just log this request and return success
+        // This prevents email enumeration attacks
+        
+        if ($user) {
+            // Log password reset request for admin review
+            error_log("Password reset requested for user: " . $user['username'] . " (" . $email . ")");
+        }
+        
+        // Always return success to prevent email enumeration
+        die(json_encode(["status" => "success", "message" => "Nếu email tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu."]));
+    }
 } else {
     die(json_encode(["status" => "error", "message" => "Yêu cầu không hợp lệ"]));
 }

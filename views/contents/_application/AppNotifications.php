@@ -51,34 +51,74 @@ $(document).ready(function() {
                     const isRead = notif.is_read == 1;
                     const bgClass = isRead ? 'bg-card' : 'bg-vanixjnk/5';
                     
+                    // Determine the link based on notification type
+                    let notifLink = '#';
+                    const type = notif.type || '';
+                    const relatedId = notif.related_id || notif.entity_id || '';
+                    const entityType = notif.entity_type || '';
+                    const postIdForComment = notif.post_id_for_comment || '';
+                    
+                    if (type === 'follow') {
+                        notifLink = '/u/' + (notif.username || '');
+                    } else if (type === 'like' || type === 'comment') {
+                        // For likes and comments on posts
+                        notifLink = '/post/' + relatedId;
+                    } else if (type === 'reply') {
+                        // For replies, use post_id_for_comment (the post containing the comment)
+                        if (postIdForComment) {
+                            notifLink = '/post/' + postIdForComment;
+                        } else {
+                            notifLink = '/u/' + (notif.username || '');
+                        }
+                    } else if (type === 'mention') {
+                        notifLink = '/post/' + relatedId;
+                    } else if (type === 'message') {
+                        notifLink = '/messages?conversation=' + relatedId;
+                    } else if (notif.username) {
+                        notifLink = '/u/' + notif.username;
+                    }
+
+                    // Notification icons based on type
+                    const typeIcons = {
+                        'like': 'solar:heart-linear',
+                        'comment': 'solar:chat-round-linear',
+                        'reply': 'solar:reply-linear',
+                        'follow': 'solar:user-plus-rounded-linear',
+                        'mention': 'solar:mention-circle-linear',
+                        'message': 'solar:letter-linear'
+                    };
+                    const typeIcon = typeIcons[type] || 'solar:bell-linear';
+
                     html += `
-                        <div class="bg-card border border-border rounded-xl p-4 hover:bg-accent transition ${bgClass}" data-notification-id="${notif.id}">
+                        <a href="${notifLink}" class="block bg-card border border-border rounded-xl p-4 hover:bg-accent transition ${bgClass}" data-notification-id="${notif.id}">
                             <div class="flex items-start gap-3">
-                                <a href="/u/${notif.username || ''}" class="shrink-0">
+                                <div class="relative shrink-0">
                                     <img src="${avatar}" alt="Avatar" class="h-10 w-10 rounded-full object-cover">
-                                </a>
+                                    <div class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-vanixjnk flex items-center justify-center">
+                                        <iconify-icon icon="${typeIcon}" width="12" class="text-white"></iconify-icon>
+                                    </div>
+                                </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm text-foreground">${notif.message || 'Có thông báo mới'}</p>
                                     <p class="text-xs text-muted-foreground mt-1">${formatTime(notif.created_at)}</p>
                                 </div>
                                 ${!isRead ? '<div class="h-2 w-2 rounded-full bg-vanixjnk shrink-0 mt-2"></div>' : ''}
                             </div>
-                        </div>
+                        </a>
                     `;
                 });
                 
                 $container.html(html);
                 
-                $container.find('[data-notification-id]').on('click', function() {
+                // Mark notification as read when clicking
+                $container.find('[data-notification-id]').on('click', function(e) {
                     const notifId = $(this).data('notification-id');
-                    if ($(this).hasClass('bg-vanixjnk/5')) {
-                        $.post('/api/controller/app', { type: 'MARK_NOTIFICATION_READ', notification_id: notifId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
-                            if (data.status === 'success') {
-                                $(this).removeClass('bg-vanixjnk/5').addClass('bg-card');
-                                $(this).find('.rounded-full').remove();
-                            }
-                        }.bind(this), 'json');
-                    }
+                    // Mark as read in background (don't prevent navigation)
+                    $.post('/api/controller/app', { 
+                        type: 'MARK_NOTIFICATION_READ', 
+                        notification_id: notifId, 
+                        csrf_token: window.CSRF_TOKEN || '' 
+                    }, 'json');
                 });
             } else {
                 $('#notifications-container').html('<div class="text-center py-12"><p class="text-red-500">Có lỗi xảy ra khi tải thông báo</p></div>');

@@ -12,7 +12,7 @@ if (!empty($_SESSION['email'])) {
             <iconify-icon icon="solar:user-plus-rounded-linear" class="text-vanixjnk" width="28"></iconify-icon>
         </div>
         <h1 class="text-2xl font-bold text-foreground mb-2">Tạo tài khoản</h1>
-        <p class="text-muted-foreground">Tham gia cộng đồng Vanix Social chỉ với vài bước.</p>
+        <p class="text-muted-foreground">Tham gia cộng đồng Vani Social chỉ với vài bước.</p>
     </div>
     <div id="register-form" class="space-y-4">
         <div class="space-y-2">

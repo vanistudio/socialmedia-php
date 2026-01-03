@@ -57,12 +57,6 @@ $authRequiredTypes = [
     'SEARCH_ALL',
     'GET_FOLLOWERS',
     'GET_FOLLOWING',
-    'GET_MODERATION_LOGS',
-    'REVIEW_MODERATION',
-    'GET_BLACKLIST_KEYWORDS',
-    'ADD_BLACKLIST_KEYWORD',
-    'UPDATE_BLACKLIST_KEYWORD',
-    'DELETE_BLACKLIST_KEYWORD',
 ];
 
 if (in_array($type, $authRequiredTypes, true)) {
@@ -100,6 +94,27 @@ if ($type === 'UPDATE_PROFILE') {
     }
     if (isset($_POST['bio'])) {
         $updateData['bio'] = check_string2($_POST['bio']);
+    }
+
+    if (isset($_POST['location'])) {
+        $updateData['location'] = check_string2($_POST['location']);
+    }
+
+    if (isset($_POST['website'])) {
+        $website = check_string2($_POST['website']);
+        if (!empty($website) && !preg_match('/^https?:\/\//', $website)) {
+            $website = 'https://' . $website;
+        }
+        $updateData['website'] = $website;
+    }
+
+    if (isset($_POST['birthday'])) {
+        $birthday = check_string2($_POST['birthday']);
+        if (!empty($birthday) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
+            $updateData['birthday'] = $birthday;
+        } elseif (empty($birthday)) {
+            $updateData['birthday'] = null;
+        }
     }
 
     if (isset($_POST['avatar'])) {
@@ -819,14 +834,20 @@ if ($type === 'GET_NOTIFICATIONS') {
     
     $notifications = $Vani->get_list("
         SELECT n.*, 
+            n.entity_id as related_id,
             u.username, u.full_name, u.avatar,
             CASE 
                 WHEN n.type = 'follow' THEN CONCAT(u.full_name, ' đã theo dõi bạn')
                 WHEN n.type = 'like' THEN CONCAT(u.full_name, ' đã thích bài viết của bạn')
                 WHEN n.type = 'comment' THEN CONCAT(u.full_name, ' đã bình luận bài viết của bạn')
                 WHEN n.type = 'reply' THEN CONCAT(u.full_name, ' đã trả lời bình luận của bạn')
+                WHEN n.type = 'message' THEN CONCAT(u.full_name, ' đã gửi tin nhắn cho bạn')
                 ELSE 'Có thông báo mới'
-            END as message
+            END as message,
+            CASE 
+                WHEN n.entity_type = 'comment' THEN (SELECT post_id FROM post_comments WHERE id = n.entity_id)
+                ELSE NULL
+            END as post_id_for_comment
         FROM `notifications` n
         LEFT JOIN `users` u ON n.actor_id = u.id
         WHERE n.user_id = '$uid'
@@ -970,177 +991,6 @@ if ($type === 'GET_FOLLOWING') {
     ");
     
     json_success('Lấy danh sách đang theo dõi thành công', ['users' => $users]);
-}
-
-function isAdmin($user) {
-    if (!$user) return false;
-    $level = $user['level'] ?? '';
-    return $level === 'admin' || $level === 'administrator';
-}
-
-if ($type === 'GET_MODERATION_LOGS') {
-    if (!$currentUser || !isAdmin($currentUser)) {
-        json_error('Bạn không có quyền truy cập');
-    }
-    
-    $page = intval($_POST['page'] ?? 1);
-    $limit = intval($_POST['limit'] ?? 20);
-    $offset = ($page - 1) * $limit;
-    $status = addslashes($_POST['status'] ?? '');
-    
-    $where = "1=1";
-    if ($status === 'pending') {
-        $where .= " AND review_status IS NULL";
-    } elseif ($status === 'approved') {
-        $where .= " AND review_status = 'approved'";
-    } elseif ($status === 'rejected') {
-        $where .= " AND review_status = 'rejected'";
-    }
-    
-    $logs = $Vani->get_list("
-        SELECT 
-            m.*,
-            u.username,
-            u.full_name,
-            u.avatar,
-            r.username as reviewer_username,
-            r.full_name as reviewer_full_name
-        FROM content_moderation_logs m
-        JOIN users u ON m.user_id = u.id
-        LEFT JOIN users r ON m.reviewed_by = r.id
-        WHERE $where
-        ORDER BY m.created_at DESC
-        LIMIT $limit OFFSET $offset
-    ");
-    
-    $total = intval($Vani->num_rows("SELECT id FROM content_moderation_logs WHERE $where"));
-    
-    foreach ($logs as &$log) {
-        $log['violations'] = json_decode($log['violations'] ?? '[]', true);
-        $log['blacklist_keywords'] = json_decode($log['blacklist_keywords'] ?? '[]', true);
-        $log['scores'] = json_decode($log['scores'] ?? '{}', true);
-    }
-    
-    json_success('Lấy danh sách thành công', [
-        'logs' => $logs,
-        'total' => $total,
-        'page' => $page,
-        'limit' => $limit,
-    ]);
-}
-
-if ($type === 'REVIEW_MODERATION') {
-    if (!$currentUser || !isAdmin($currentUser)) {
-        json_error('Bạn không có quyền thực hiện');
-    }
-    
-    $log_id = intval($_POST['log_id'] ?? 0);
-    $review_status = addslashes($_POST['review_status'] ?? '');
-    
-    if ($log_id <= 0) json_error('log_id không hợp lệ');
-    if (!in_array($review_status, ['approved', 'rejected'], true)) {
-        json_error('review_status không hợp lệ');
-    }
-    
-    $log = $Vani->get_row("SELECT * FROM content_moderation_logs WHERE id = '$log_id'");
-    if (!$log) json_error('Log không tồn tại');
-    
-    $Vani->update('content_moderation_logs', [
-        'review_status' => $review_status,
-        'reviewed_by' => intval($currentUser['id']),
-        'reviewed_at' => date('Y-m-d H:i:s'),
-    ], "`id` = '$log_id'");
-    
-    if ($review_status === 'approved' && $log['related_id']) {
-        $relatedId = intval($log['related_id']);
-        $contentType = addslashes($log['content_type']);
-        
-        if ($contentType === 'post') {
-            $Vani->remove('posts', "`id` = '$relatedId'");
-        } elseif ($contentType === 'comment') {
-            $Vani->remove('post_comments', "`id` = '$relatedId'");
-        } elseif ($contentType === 'message') {
-            $Vani->remove('messages', "`id` = '$relatedId'");
-        }
-    }
-    
-    json_success('Đã cập nhật review thành công');
-}
-
-if ($type === 'GET_BLACKLIST_KEYWORDS') {
-    if (!$currentUser || !isAdmin($currentUser)) {
-        json_error('Bạn không có quyền truy cập');
-    }
-    
-    $keywords = $Vani->get_list("
-        SELECT * FROM blacklist_keywords 
-        ORDER BY created_at DESC
-    ");
-    
-    json_success('Lấy danh sách từ khóa thành công', ['keywords' => $keywords]);
-}
-
-if ($type === 'ADD_BLACKLIST_KEYWORD') {
-    if (!$currentUser || !isAdmin($currentUser)) {
-        json_error('Bạn không có quyền thực hiện');
-    }
-    
-    $keyword = trim(check_string2($_POST['keyword'] ?? ''));
-    if (empty($keyword)) json_error('Từ khóa không được để trống');
-    
-    $exists = $Vani->get_row("SELECT * FROM blacklist_keywords WHERE keyword = '$keyword'");
-    if ($exists) json_error('Từ khóa đã tồn tại');
-    
-    $id = $Vani->insert('blacklist_keywords', [
-        'keyword' => $keyword,
-        'active' => 1,
-    ]);
-    
-    if (!$id) json_error('Không thể thêm từ khóa');
-    
-    json_success('Đã thêm từ khóa thành công', ['id' => intval($id)]);
-}
-
-if ($type === 'UPDATE_BLACKLIST_KEYWORD') {
-    if (!$currentUser || !isAdmin($currentUser)) {
-        json_error('Bạn không có quyền thực hiện');
-    }
-    
-    $id = intval($_POST['id'] ?? 0);
-    $keyword = trim(check_string2($_POST['keyword'] ?? ''));
-    $active = intval($_POST['active'] ?? 1);
-    
-    if ($id <= 0) json_error('id không hợp lệ');
-    if (empty($keyword)) json_error('Từ khóa không được để trống');
-    
-    $exists = $Vani->get_row("SELECT * FROM blacklist_keywords WHERE id = '$id'");
-    if (!$exists) json_error('Từ khóa không tồn tại');
-    
-    $duplicate = $Vani->get_row("SELECT * FROM blacklist_keywords WHERE keyword = '$keyword' AND id != '$id'");
-    if ($duplicate) json_error('Từ khóa đã tồn tại');
-    
-    $Vani->update('blacklist_keywords', [
-        'keyword' => $keyword,
-        'active' => $active,
-    ], "`id` = '$id'");
-    
-    json_success('Đã cập nhật từ khóa thành công');
-}
-
-if ($type === 'DELETE_BLACKLIST_KEYWORD') {
-    if (!$currentUser || !isAdmin($currentUser)) {
-        json_error('Bạn không có quyền thực hiện');
-    }
-    
-    $id = intval($_POST['id'] ?? 0);
-    if ($id <= 0) json_error('id không hợp lệ');
-    
-    $exists = $Vani->get_row("SELECT * FROM blacklist_keywords WHERE id = '$id'");
-    if (!$exists) json_error('Từ khóa không tồn tại');
-    
-    $Vani->remove('blacklist_keywords', "`id` = '$id'");
-    
-    json_success('Đã xóa từ khóa thành công');
 }
 
 json_error('type không hợp lệ');

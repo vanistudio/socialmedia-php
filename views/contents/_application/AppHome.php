@@ -30,6 +30,28 @@ if ($isLoggedIn && $currentUserId > 0) {
     $visibilityFilter = "AND p.visibility = 'public'";
 }
 
+// Get suggested users (users not followed by current user)
+$suggestedUsers = [];
+if ($isLoggedIn && $currentUserId > 0) {
+    $suggestedUsers = $Vani->get_list("
+        SELECT u.*, 
+            (SELECT COUNT(*) FROM `follows` WHERE `following_id` = u.id) as followers_count,
+            (SELECT COUNT(*) FROM `posts` WHERE `user_id` = u.id) as posts_count
+        FROM `users` u
+        WHERE u.id != '$currentUserId'
+        AND u.id NOT IN (
+            SELECT following_id FROM `follows` WHERE follower_id = '$currentUserId'
+        )
+        AND u.id NOT IN (
+            SELECT blocked_id FROM user_blocks WHERE blocker_id = '$currentUserId'
+            UNION
+            SELECT blocker_id FROM user_blocks WHERE blocked_id = '$currentUserId'
+        )
+        ORDER BY followers_count DESC, u.created_at DESC
+        LIMIT 5
+    ");
+}
+
 $posts = $Vani->get_list("SELECT 
     p.id, p.user_id, p.content, p.visibility, p.created_at,
     u.full_name, u.username, u.avatar,
@@ -58,11 +80,51 @@ $posts = $Vani->get_list("SELECT
                             <div id="post-media-previews" class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2"></div>
 
                             <div class="flex justify-between items-center mt-2 pt-2 border-t border-border">
-                                <div class="flex gap-1 text-muted-foreground">
+                                <div class="flex items-center gap-2 text-muted-foreground">
                                     <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent hover:text-vanixjnk transition flex items-center justify-center" aria-label="Add media" onclick="$('#post-media-upload').click()">
                                         <iconify-icon icon="solar:gallery-wide-linear" width="20"></iconify-icon>
                                     </button>
                                     <input type="file" id="post-media-upload" accept="image/*,video/*" class="hidden" multiple>
+                                    
+                                    <div class="relative" id="visibility-dropdown-container">
+                                        <input type="hidden" name="visibility" id="post-visibility" value="public">
+                                        <button type="button" id="visibility-trigger" class="h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent transition flex items-center gap-2 text-sm">
+                                            <iconify-icon id="visibility-icon" icon="solar:earth-linear" width="16"></iconify-icon>
+                                            <span id="visibility-text">Công khai</span>
+                                            <iconify-icon icon="solar:alt-arrow-down-linear" width="14" class="text-muted-foreground"></iconify-icon>
+                                        </button>
+                                        <div id="visibility-dropdown" class="hidden absolute bottom-full left-0 mb-2 w-48 bg-card border border-border rounded-xl shadow-lg z-50">
+                                            <ul class="py-1">
+                                                <li>
+                                                    <button type="button" data-visibility="public" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                        <iconify-icon icon="solar:earth-linear" width="18"></iconify-icon>
+                                                        <div>
+                                                            <span class="font-medium">Công khai</span>
+                                                            <p class="text-xs text-muted-foreground">Mọi người có thể xem</p>
+                                                        </div>
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" data-visibility="followers" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                        <iconify-icon icon="solar:users-group-rounded-linear" width="18"></iconify-icon>
+                                                        <div>
+                                                            <span class="font-medium">Người theo dõi</span>
+                                                            <p class="text-xs text-muted-foreground">Chỉ người theo dõi</p>
+                                                        </div>
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" data-visibility="private" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                        <iconify-icon icon="solar:lock-linear" width="18"></iconify-icon>
+                                                        <div>
+                                                            <span class="font-medium">Riêng tư</span>
+                                                            <p class="text-xs text-muted-foreground">Chỉ mình tôi</p>
+                                                        </div>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                                 <button type="submit" class="h-9 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium">Đăng bài</button>
                             </div>
@@ -72,7 +134,7 @@ $posts = $Vani->get_list("SELECT
             </div>
         <?php else: ?>
             <div class="bg-card border border-border rounded-2xl p-6 shadow-sm text-center">
-                <h2 class="text-lg font-semibold text-foreground">Chào mừng đến với Vanix Social!</h2>
+                <h2 class="text-lg font-semibold text-foreground">Chào mừng đến với Vani Social!</h2>
                 <p class="text-muted-foreground mt-1">Đăng nhập hoặc đăng ký để chia sẻ khoảnh khắc của bạn.</p>
                 <div class="mt-4 flex items-center justify-center gap-2">
                     <a href="/login" class="h-10 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium flex items-center gap-2">
@@ -195,8 +257,56 @@ $posts = $Vani->get_list("SELECT
     </div>
 
     <div class="lg:col-span-1 space-y-6">
+        <?php if ($isLoggedIn && !empty($suggestedUsers)): ?>
         <div class="bg-card border border-border rounded-2xl p-4 shadow-sm">
             <h3 class="font-semibold text-foreground mb-4">Gợi ý cho bạn</h3>
+            <div class="space-y-3">
+                <?php foreach ($suggestedUsers as $sugUser): ?>
+                <div class="flex items-center gap-3 group">
+                    <a href="/u/<?php echo htmlspecialchars($sugUser['username']); ?>" class="shrink-0">
+                        <img src="<?php echo htmlspecialchars(!empty($sugUser['avatar']) ? $sugUser['avatar'] : 'https://placehold.co/200x200/png'); ?>" alt="Avatar" class="h-10 w-10 rounded-full object-cover">
+                    </a>
+                    <div class="flex-1 min-w-0">
+                        <a href="/u/<?php echo htmlspecialchars($sugUser['username']); ?>" class="font-medium text-foreground hover:underline truncate block text-sm"><?php echo htmlspecialchars($sugUser['full_name']); ?></a>
+                        <p class="text-xs text-muted-foreground"><?php echo intval($sugUser['followers_count']); ?> người theo dõi</p>
+                    </div>
+                    <button type="button" data-action="quick-follow" data-user-id="<?php echo $sugUser['id']; ?>" class="h-8 px-3 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-xs font-medium shrink-0">
+                        Theo dõi
+                    </button>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <a href="/explore" class="block mt-4 text-center text-sm text-vanixjnk hover:underline">Xem thêm</a>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!$isLoggedIn): ?>
+        <div class="bg-card border border-border rounded-2xl p-4 shadow-sm">
+            <h3 class="font-semibold text-foreground mb-2">Tham gia Vani Social</h3>
+            <p class="text-sm text-muted-foreground mb-4">Đăng ký để kết nối với mọi người và chia sẻ khoảnh khắc.</p>
+            <div class="space-y-2">
+                <a href="/register" class="block w-full h-10 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium flex items-center justify-center gap-2">
+                    <iconify-icon icon="solar:user-plus-rounded-linear" width="18"></iconify-icon>
+                    <span>Đăng ký ngay</span>
+                </a>
+                <a href="/login" class="block w-full h-10 px-4 rounded-lg border border-input bg-card hover:bg-accent transition text-sm font-medium flex items-center justify-center gap-2">
+                    <iconify-icon icon="solar:login-3-linear" width="18"></iconify-icon>
+                    <span>Đã có tài khoản? Đăng nhập</span>
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <div class="bg-card border border-border rounded-2xl p-4 shadow-sm">
+            <h3 class="font-semibold text-foreground mb-3">Liên kết nhanh</h3>
+            <div class="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <a href="/about" class="hover:text-vanixjnk transition">Giới thiệu</a>
+                <span>·</span>
+                <a href="/terms" class="hover:text-vanixjnk transition">Điều khoản</a>
+                <span>·</span>
+                <a href="/privacy" class="hover:text-vanixjnk transition">Quyền riêng tư</a>
+            </div>
+            <p class="text-xs text-muted-foreground mt-3">© <?php echo date('Y'); ?> Vani Social</p>
         </div>
     </div>
 </div>
@@ -282,6 +392,38 @@ $(document).ready(function() {
     let editPostMediaFiles = [];
     let editPostMediaUrls = [];
     let editPostDialog = null;
+
+    // Visibility dropdown
+    $('#visibility-trigger').on('click', function(e) {
+        e.stopPropagation();
+        $('#visibility-dropdown').toggleClass('hidden');
+    });
+
+    $('[data-visibility]').on('click', function() {
+        const visibility = $(this).data('visibility');
+        $('#post-visibility').val(visibility);
+        
+        const icons = {
+            'public': 'solar:earth-linear',
+            'followers': 'solar:users-group-rounded-linear',
+            'private': 'solar:lock-linear'
+        };
+        const texts = {
+            'public': 'Công khai',
+            'followers': 'Người theo dõi',
+            'private': 'Riêng tư'
+        };
+        
+        $('#visibility-icon').attr('icon', icons[visibility]);
+        $('#visibility-text').text(texts[visibility]);
+        $('#visibility-dropdown').addClass('hidden');
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#visibility-dropdown-container').length) {
+            $('#visibility-dropdown').addClass('hidden');
+        }
+    });
     
     setTimeout(function() {
         if (window.initDialog) {
@@ -656,6 +798,22 @@ $(document).ready(function() {
                     }
                 }, 'json').fail(() => toast.error('Không thể kết nối tới máy chủ'));
                 break;
+
+            case 'quick-follow':
+                const userId = $self.data('user-id');
+                $.post('/api/controller/app', { type: 'TOGGLE_FOLLOW', user_id: userId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
+                    if (data.status === 'success') {
+                        if (data.is_following) {
+                            $self.text('Đang theo dõi').removeClass('bg-vanixjnk text-white').addClass('border border-input bg-card');
+                        } else {
+                            $self.text('Theo dõi').removeClass('border border-input bg-card').addClass('bg-vanixjnk text-white');
+                        }
+                        toast.success(data.message);
+                    } else {
+                        toast.error(data.message || 'Có lỗi xảy ra');
+                    }
+                }, 'json').fail(() => toast.error('Không thể kết nối tới máy chủ'));
+                break;
         }
     });
     $(document).on('submit', 'form[data-form="add-comment"]', function(e) {
@@ -720,37 +878,37 @@ $(document).ready(function() {
                             <div class="max-h-[200px] overflow-y-auto scrollbar-thin p-1">
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Spam" data-label="Spam" data-state="checked">
                                     <span class="truncate">Spam</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Nội dung không phù hợp" data-label="Nội dung không phù hợp" data-state="unchecked">
                                     <span class="truncate">Nội dung không phù hợp</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Quấy rối" data-label="Quấy rối" data-state="unchecked">
                                     <span class="truncate">Quấy rối</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Lừa đảo" data-label="Lừa đảo" data-state="unchecked">
                                     <span class="truncate">Lừa đảo</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Bạo lực" data-label="Bạo lực" data-state="unchecked">
                                     <span class="truncate">Bạo lực</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
                                 <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Other" data-label="Khác" data-state="unchecked">
                                     <span class="truncate">Khác</span>
-                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 transition-opacity duration-150 check-icon">
                                         <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
                                     </span>
                                 </div>
