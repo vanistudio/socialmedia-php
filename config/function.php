@@ -79,6 +79,13 @@ function getOpenAIClient() {
     }
 }
 
+function normalizeText($text) {
+    $text = mb_strtolower($text, 'UTF-8');
+    $text = preg_replace('/\s+/', ' ', $text);
+    $text = trim($text);
+    return $text;
+}
+
 function checkBlacklist($text) {
     if (empty($text)) {
         return ['flagged' => false, 'keywords' => []];
@@ -92,18 +99,30 @@ function checkBlacklist($text) {
     try {
         $blacklist = $Vani->get_list("SELECT keyword FROM blacklist_keywords WHERE active = 1");
         $foundKeywords = [];
-        $textLower = mb_strtolower($text, 'UTF-8');
+        $textNormalized = normalizeText($text);
         
         foreach ($blacklist as $item) {
             $keyword = mb_strtolower(trim($item['keyword'] ?? ''), 'UTF-8');
-            if (!empty($keyword) && mb_strpos($textLower, $keyword) !== false) {
+            if (empty($keyword)) continue;
+            
+            $keywordNormalized = normalizeText($keyword);
+            
+            if (mb_strpos($textNormalized, $keywordNormalized) !== false) {
                 $foundKeywords[] = $keyword;
+            }
+            
+            $keywordNoSpaces = str_replace(' ', '', $keywordNormalized);
+            $textNoSpaces = str_replace(' ', '', $textNormalized);
+            if (!empty($keywordNoSpaces) && mb_strpos($textNoSpaces, $keywordNoSpaces) !== false) {
+                if (!in_array($keyword, $foundKeywords)) {
+                    $foundKeywords[] = $keyword;
+                }
             }
         }
         
         return [
             'flagged' => !empty($foundKeywords),
-            'keywords' => $foundKeywords,
+            'keywords' => array_unique($foundKeywords),
         ];
     } catch (Exception $e) {
         error_log('Blacklist check error: ' . $e->getMessage());

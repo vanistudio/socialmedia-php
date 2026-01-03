@@ -340,12 +340,96 @@ try {
     }
 
     $defaultBlacklistKeywords = [
-        'địt', 'đụ', 'đéo', 'đcm', 'đkm', 'vl', 'vcl', 'clgt', 'dm', 'đmm',
-        'lồn', 'buồi', 'cặc', 'dái', 'đít', 'lol', 'lz',
-        'chết tiệt', 'đồ khốn', 'đồ ngu', 'thằng ngu', 'con ngu',
-        'giết', 'chém', 'đánh chết', 'giết người',
-        'bom', 'bom nổ', 'khủng bố', 'đánh bom',
-        'ma túy', 'heroin', 'cần sa', 'cocain',
+        // Từ ngữ tục tĩu, thô tục
+        'địt', 'đụ', 'đéo', 'đcm', 'đkm', 'vl', 'vcl', 'clgt', 'dm', 'đmm', 'đkm', 'đcmn',
+        'lồn', 'buồi', 'cặc', 'dái', 'đít', 'lol', 'lz', 'lz', 'lồn', 'buồi', 'cặc',
+        'đụ má', 'đụ mẹ', 'đụ cha', 'đụ bố', 'đụ con', 'đụ chó', 'đụ mẹ mày',
+        'địt mẹ', 'địt cha', 'địt bố', 'địt con', 'địt chó',
+        'đcm', 'đkm', 'đcmn', 'đkmd', 'đkmdm', 'đkmđm',
+        'vl', 'vcl', 'vkl', 'vcc', 'vcl', 'vlxx',
+        'clgt', 'clmm', 'clm', 'cl', 'clmđ', 'clmmđ',
+        'dm', 'đmm', 'đm', 'đmmđ', 'đmmd', 'đmmđm',
+        'fuck', 'fck', 'f*ck', 'f**k', 'f***',
+        'shit', 'sh*t', 's**t', 's***',
+        'bitch', 'b*tch', 'b**ch', 'b***h',
+        'ass', 'a**', 'a***', 'asshole', 'a**hole',
+        
+        // Xúc phạm, chửi bới
+        'chết tiệt', 'đồ khốn', 'đồ ngu', 'thằng ngu', 'con ngu', 'đồ ngu xuẩn',
+        'đồ chó', 'đồ súc vật', 'đồ khốn nạn', 'đồ đê tiện', 'đồ hèn',
+        'thằng chó', 'con chó', 'đồ chó má', 'đồ chó đẻ',
+        'đồ điên', 'đồ khùng', 'đồ dại', 'đồ ngu dốt',
+        'mẹ mày', 'cha mày', 'bố mày', 'ông mày', 'bà mày',
+        'đồ khốn kiếp', 'đồ súc sinh', 'đồ thú vật',
+        'ngu si', 'ngu dốt', 'ngu xuẩn', 'ngu ngốc',
+        'đồ lừa đảo', 'đồ lừa', 'đồ lừa bịp',
+        
+        // Bạo lực, đe dọa
+        'giết', 'chém', 'đánh chết', 'giết người', 'giết chết',
+        'đánh chết', 'đập chết', 'bắn chết', 'chém chết',
+        'giết mẹ', 'giết cha', 'giết bố', 'giết con',
+        'chém chết', 'đánh chết', 'bắn chết', 'đập chết',
+        'đánh vỡ đầu', 'đập vỡ đầu', 'chém đầu', 'cắt đầu',
+        'bom', 'bom nổ', 'khủng bố', 'đánh bom', 'nổ bom',
+        'đặt bom', 'phát nổ', 'nổ tung', 'nổ chết',
+        'đánh nhau', 'đánh lộn', 'đánh đập', 'đánh đấm',
+        'đâm', 'đâm chết', 'đâm vào', 'đâm người',
+        'cắt cổ', 'cắt họng', 'cắt đầu', 'chặt đầu',
+        'tự tử', 'tự sát', 'nhảy lầu', 'nhảy cầu',
+        'đe dọa', 'đe dọa giết', 'đe dọa chém', 'đe dọa đánh',
+        
+        // Ma túy, chất cấm
+        'ma túy', 'heroin', 'cần sa', 'cocain', 'cocaine',
+        'thuốc lắc', 'thuốc phiện', 'ma túy đá', 'cần sa',
+        'cần', 'cỏ', 'cỏ dại', 'cần sa', 'cần cỏ',
+        'hàng', 'hàng trắng', 'hàng đá', 'hàng cỏ',
+        'đá', 'đá cục', 'đá viên', 'ma túy đá',
+        'thuốc', 'thuốc lắc', 'thuốc phiện', 'thuốc lá cần sa',
+        'hút', 'hút chích', 'chích', 'tiêm chích',
+        'buôn bán ma túy', 'mua bán ma túy', 'sử dụng ma túy',
+        
+        // Nội dung tình dục, khiêu dâm
+        'sex', 's*x', 's**', 's***',
+        'porn', 'p*rn', 'p**n', 'p***n',
+        'xxx', 'x*x*x', 'x**x', 'x***x',
+        'phim sex', 'phim khiêu dâm', 'phim người lớn',
+        'ảnh sex', 'ảnh khiêu dâm', 'ảnh người lớn',
+        'video sex', 'video khiêu dâm', 'video người lớn',
+        'webcam', 'web cam', 'cam sex', 'cam khiêu dâm',
+        'gái gọi', 'gái điếm', 'gái làng chơi',
+        'mại dâm', 'mua dâm', 'bán dâm',
+        'trai bao', 'gái bao', 'bao nuôi',
+        
+        // Từ lóng, biến thể
+        'đm', 'đmm', 'đkm', 'đcm', 'đcmn', 'đkmd',
+        'vl', 'vcl', 'vkl', 'vcc', 'vlxx', 'vlz',
+        'clgt', 'clmm', 'clm', 'cl', 'clmđ', 'clmmđ',
+        'dm', 'đmm', 'đm', 'đmmđ', 'đmmd', 'đmmđm',
+        'đjt', 'đjt mẹ', 'đjt cha', 'đjt bố',
+        'đụt', 'đụt mẹ', 'đụt cha', 'đụt bố',
+        'địch', 'địch mẹ', 'địch cha', 'địch bố',
+        'đếch', 'đếch mẹ', 'đếch cha', 'đếch bố',
+        'đếch mẹ', 'đếch cha', 'đếch bố', 'đếch con',
+        'đếch chó', 'đếch mẹ mày', 'đếch cha mày',
+        
+        // Spam, lừa đảo
+        'lừa đảo', 'lừa bịp', 'lừa gạt', 'lừa dối',
+        'lừa tiền', 'lừa tiền bạc', 'lừa tài sản',
+        'scam', 'sc*m', 's**m', 's***m',
+        'lừa', 'bịp', 'gạt', 'dối', 'lừa dối',
+        'đa cấp', 'bán hàng đa cấp', 'kinh doanh đa cấp',
+        'lừa đảo online', 'lừa đảo mạng', 'lừa đảo internet',
+        
+        // Từ ngữ phân biệt, kỳ thị
+        'đồng tính', 'gay', 'les', 'lesbian', 'lgbt',
+        'kỳ thị', 'phân biệt', 'phân biệt đối xử',
+        'da đen', 'da trắng', 'da vàng', 'da đỏ',
+        'mọi', 'mọi rợ', 'man di', 'man rợ',
+        
+        // Từ ngữ khác
+        'cờ bạc', 'đánh bạc', 'cá độ', 'cờ bạc online',
+        'rượu bia', 'say xỉn', 'nghiện rượu', 'nghiện bia',
+        'tự tử', 'tự sát', 'nhảy lầu', 'nhảy cầu', 'tự vẫn',
     ];
 
     $stmt = $pdo->prepare("INSERT INTO `blacklist_keywords` (`keyword`, `active`) VALUES (:keyword, 1)
