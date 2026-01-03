@@ -16,16 +16,16 @@ if (!empty($_SESSION['email'])) {
     </div>
     <div id="login-form" class="space-y-4">
         <div class="space-y-2">
-            <label for="email" class="text-sm font-medium text-foreground">Email</label>
+            <label for="login_identifier" class="text-sm font-medium text-foreground">Email hoặc Username</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <iconify-icon icon="solar:letter-linear" class="text-muted-foreground" width="18"></iconify-icon>
                 </div>
                 <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="you@example.com"
+                    type="text"
+                    id="login_identifier"
+                    name="login_identifier"
+                    placeholder="Email hoặc username"
                     class="w-full h-10 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
                     required>
             </div>
@@ -103,7 +103,7 @@ if (!empty($_SESSION['email'])) {
 
         var formData = {
             type: "LOGIN",
-            email: $("#email").val(),
+            login_identifier: $("#login_identifier").val(),
             password: $("#password").val(),
         };
 
