@@ -127,7 +127,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
             <?php else: ?>
                 <div class="space-y-6">
                     <?php foreach ($tabContent as $post): ?>
-                        <?php include __DIR__ . '/../components/_post_card.php';  ?>
+                        <?php include $_SERVER['DOCUMENT_ROOT'] . '/views/components/_post_card.php';  ?>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
