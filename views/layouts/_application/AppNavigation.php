@@ -104,7 +104,6 @@ $__username = $__currentUser['username'] ?? '';
     </nav>
 </header>
 
-<!-- Search Dialog (Mobile) -->
 <div id="search-dialog" class="dialog hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-20" data-state="closed">
     <div class="dialog-overlay fixed inset-0 bg-background/80 backdrop-blur-sm" onclick="closeSearchDialog()"></div>
     <div class="dialog-content relative bg-card border border-border rounded-2xl shadow-lg w-full max-w-lg max-h-[80vh] overflow-hidden">
@@ -134,7 +133,7 @@ function performSearch(query, targetElement) {
         return;
     }
     
-    $.post('/api/controller/app', { type: 'SEARCH_ALL', query: query }, function(data) {
+    $.post('/api/controller/app', { type: 'SEARCH_ALL', query: query, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
         if (data.status === 'success') {
             const users = data.users || [];
             const posts = data.posts || [];
@@ -181,7 +180,6 @@ function performSearch(query, targetElement) {
 }
 
 $(document).ready(function() {
-    // Desktop search
     $('#global-search-input').on('input', function() {
         const query = $(this).val().trim();
         debounceSearch(function() {
@@ -195,7 +193,6 @@ $(document).ready(function() {
         }
     });
     
-    // Mobile search dialog
     $('#open-search-dialog-btn').on('click', function() {
         openSearchDialog();
     });

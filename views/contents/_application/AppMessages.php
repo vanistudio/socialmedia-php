@@ -9,7 +9,6 @@ if (!$isLoggedIn) {
 $currentUser = $Vani->get_row("SELECT * FROM `users` WHERE `email` = '" . addslashes($_SESSION['email']) . "'");
 $currentUserId = intval($currentUser['id'] ?? 0);
 
-// Lấy danh sách conversations
 $conversations = $Vani->get_list("
     SELECT 
         c.id,
@@ -28,7 +27,6 @@ $conversations = $Vani->get_list("
     ORDER BY last_message_time DESC, c.created_at DESC
 ");
 
-// Xử lý conversations để lấy thông tin members
 $conversationsData = [];
 foreach ($conversations as $conv) {
     $convId = intval($conv['id']);
@@ -56,7 +54,6 @@ $selectedConversation = null;
 $selectedMessages = [];
 
 if ($selectedConversationId > 0) {
-    // Kiểm tra user có trong conversation không
     $member = $Vani->get_row("SELECT * FROM conversation_members WHERE conversation_id = '$selectedConversationId' AND user_id = '$currentUserId'");
     if ($member) {
         foreach ($conversationsData as $conv) {
@@ -65,8 +62,6 @@ if ($selectedConversationId > 0) {
                 break;
             }
         }
-        
-        // Lấy tin nhắn
         $selectedMessages = $Vani->get_list("
             SELECT 
                 m.id,
@@ -84,8 +79,6 @@ if ($selectedConversationId > 0) {
             ORDER BY m.created_at ASC
             LIMIT 100
         ");
-        
-        // Đánh dấu đã đọc
         $Vani->query("
             INSERT INTO message_reads (message_id, user_id)
             SELECT m.id, '$currentUserId'
@@ -99,7 +92,6 @@ if ($selectedConversationId > 0) {
 ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
-    <!-- Danh sách conversations -->
     <div class="lg:col-span-1 bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col">
         <div class="p-4 border-b border-border flex items-center justify-between">
             <h2 class="text-xl font-bold text-foreground">Tin nhắn</h2>
@@ -149,8 +141,6 @@ if ($selectedConversationId > 0) {
             <?php endif; ?>
         </div>
     </div>
-
-    <!-- Cửa sổ chat -->
     <div class="lg:col-span-2 bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col">
         <?php if ($selectedConversation): ?>
             <?php
@@ -162,7 +152,6 @@ if ($selectedConversationId > 0) {
                 ? htmlspecialchars($otherUser['avatar'] ?? 'https://placehold.co/200x200')
                 : 'https://placehold.co/200x200';
             ?>
-            <!-- Header -->
             <div class="p-4 border-b border-border flex items-center gap-3">
                 <img src="<?php echo $chatDisplayAvatar; ?>" alt="Avatar" class="h-10 w-10 rounded-full object-cover">
                 <div class="flex-1">
@@ -170,8 +159,6 @@ if ($selectedConversationId > 0) {
                     <p class="text-xs text-muted-foreground">Đang hoạt động</p>
                 </div>
             </div>
-
-            <!-- Messages -->
             <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4">
                 <?php if (empty($selectedMessages)): ?>
                     <div class="text-center text-muted-foreground py-8">
@@ -215,8 +202,6 @@ if ($selectedConversationId > 0) {
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
-
-            <!-- Input -->
             <div class="p-4 border-t border-border">
                 <form id="send-message-form" class="flex items-end gap-2">
                     <input type="hidden" name="type" value="SEND_MESSAGE">
@@ -254,16 +239,12 @@ if ($selectedConversationId > 0) {
 <script>
 let selectedConversationId = <?php echo $selectedConversationId; ?>;
 let messageMediaUrl = '';
-
-// Auto-scroll to bottom
 function scrollToBottom() {
     const container = document.getElementById('messages-container');
     if (container) {
         container.scrollTop = container.scrollHeight;
     }
 }
-
-// Load messages
 function loadMessages() {
     if (!selectedConversationId) return;
     
@@ -271,7 +252,8 @@ function loadMessages() {
         type: 'GET_MESSAGES',
         conversation_id: selectedConversationId,
         limit: 100,
-        offset: 0
+        offset: 0,
+        csrf_token: window.CSRF_TOKEN || ''
     }, function(data) {
         if (data && data.status === 'success' && data.messages) {
             renderMessages(data.messages);
@@ -281,14 +263,10 @@ function loadMessages() {
         console.error('Không thể tải tin nhắn');
     });
 }
-
-// Render messages
 function renderMessages(messages) {
     const container = document.getElementById('messages-container');
     if (!container) return;
-    
     const currentUserId = <?php echo $currentUserId; ?>;
-    
     if (messages.length === 0) {
         container.innerHTML = '<div class="text-center text-muted-foreground py-8"><p>Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p></div>';
         return;
@@ -335,7 +313,6 @@ function renderMessages(messages) {
     scrollToBottom();
 }
 
-// Send message
 $('#send-message-form').on('submit', function(e) {
     e.preventDefault();
     
@@ -349,7 +326,8 @@ $('#send-message-form').on('submit', function(e) {
         type: 'SEND_MESSAGE',
         conversation_id: selectedConversationId,
         content: $form.find('textarea[name=content]').val().trim(),
-        media_url: messageMediaUrl
+        media_url: messageMediaUrl,
+        csrf_token: window.CSRF_TOKEN || ''
     };
     
     if (!formData.content && !formData.media_url) {
@@ -379,7 +357,6 @@ $('#send-message-form').on('submit', function(e) {
     });
 });
 
-// Media upload
 $('#message-media-upload').on('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -415,28 +392,22 @@ function clearMessageMedia() {
     $('#message-media-preview').addClass('hidden');
 }
 
-// Auto-refresh messages every 3 seconds
 if (selectedConversationId) {
     setInterval(function() {
         loadMessages();
     }, 3000);
     
-    // Initial scroll
     setTimeout(scrollToBottom, 100);
 }
 
-// Auto-resize textarea
 $('textarea[name=content]').on('input', function() {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight) + 'px';
 });
 
-// New chat dialog
 let newChatDialog = null;
 
-// Khởi tạo dialog khi DOM ready
 $(document).ready(function() {
-    // Đợi một chút để đảm bảo globals.js đã load
     setTimeout(function() {
         if (window.initDialog) {
             newChatDialog = window.initDialog('new-chat-dialog');
@@ -445,7 +416,6 @@ $(document).ready(function() {
 });
 
 function openNewChatDialog() {
-    // Nếu dialog chưa được khởi tạo, thử khởi tạo lại
     if (!newChatDialog && window.initDialog) {
         newChatDialog = window.initDialog('new-chat-dialog');
     }
@@ -456,7 +426,6 @@ function openNewChatDialog() {
             $('#new-chat-search').focus();
         }, 200);
     } else {
-        // Fallback nếu dialog system chưa sẵn sàng
         const $dialog = $('#new-chat-dialog');
         $dialog.removeClass('hidden').addClass('flex');
         setTimeout(function() {
@@ -470,20 +439,17 @@ function closeNewChatDialog() {
     if (newChatDialog) {
         newChatDialog.close();
     } else {
-        // Fallback
         const $dialog = $('#new-chat-dialog');
         $dialog.attr('data-state', 'closed');
         setTimeout(function() {
             $dialog.addClass('hidden').removeClass('flex');
         }, 200);
     }
-    // Reset search
     $('#new-chat-search').val('').prop('disabled', false);
     $('#new-chat-results').empty();
     isSearching = false;
 }
 
-// Debounce hook
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -496,7 +462,6 @@ function debounce(func, wait) {
     };
 }
 
-// Search users function
 let isSearching = false;
 function performSearch(query) {
     if (isSearching) return;
@@ -515,7 +480,8 @@ function performSearch(query) {
     
     $.post('/api/controller/app', {
         type: 'SEARCH_USERS',
-        query: query
+        query: query,
+        csrf_token: window.CSRF_TOKEN || ''
     }, function(data) {
         isSearching = false;
         $searchInput.prop('disabled', false);
@@ -532,12 +498,9 @@ function performSearch(query) {
     });
 }
 
-// Debounced search function (300ms delay)
 const debouncedSearch = debounce(performSearch, 300);
 
-// Bind search event
 $(document).ready(function() {
-    // Bind event khi dialog được mở
     $(document).on('input', '#new-chat-search', function() {
         const query = $(this).val().trim();
         debouncedSearch(query);
@@ -575,7 +538,8 @@ function renderUserSearchResults(users) {
 function startConversation(userId) {
     $.post('/api/controller/app', {
         type: 'CREATE_CONVERSATION',
-        target_user_id: userId
+        target_user_id: userId,
+        csrf_token: window.CSRF_TOKEN || ''
     }, function(data) {
         if (data && data.status === 'success') {
             closeNewChatDialog();
@@ -588,10 +552,8 @@ function startConversation(userId) {
     });
 }
 
-// Close dialog on backdrop click - handled by dialog system
 </script>
 
-<!-- New Chat Dialog -->
 <div id="new-chat-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog data-state="closed">
     <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
     <div class="relative w-full max-w-md mx-auto" data-dialog-content>

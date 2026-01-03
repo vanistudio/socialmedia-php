@@ -18,10 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_error('Yêu cầu không hợp lệ');
 }
 
-// CSRF Protection
+if (!isset($_SESSION['csrf_token'])) {
+    generate_csrf_token();
+}
+
 $csrfToken = $_POST['csrf_token'] ?? '';
 if (!validate_csrf_token($csrfToken)) {
-    json_error('CSRF token không hợp lệ');
+    json_error('CSRF token không hợp lệ. Vui lòng tải lại trang.');
 }
 
 $type = $_POST['type'] ?? '';

@@ -2,7 +2,6 @@
 require $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // CSRF Protection
     $csrfToken = $_POST['csrf_token'] ?? '';
     if (!validate_csrf_token($csrfToken)) {
         die(json_encode(["status" => "error", "message" => "CSRF token không hợp lệ"]));

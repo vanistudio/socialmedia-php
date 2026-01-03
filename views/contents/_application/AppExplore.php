@@ -10,7 +10,6 @@ if ($isLoggedIn) {
     $currentUserId = intval($currentUser['id'] ?? 0);
 }
 
-// Trending posts (most liked in last 7 days)
 $trendingPosts = $Vani->get_list("
     SELECT 
         p.*, 
@@ -26,7 +25,6 @@ $trendingPosts = $Vani->get_list("
     LIMIT 20
 ");
 
-// Popular users (most followers)
 $popularUsers = $Vani->get_list("
     SELECT 
         u.*,

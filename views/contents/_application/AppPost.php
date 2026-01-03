@@ -217,7 +217,7 @@ $(document).ready(function() {
 
         switch (action) {
             case 'toggle-like':
-                $.post('/api/controller/app', { type: 'TOGGLE_LIKE', post_id: postId }, function(data) {
+                $.post('/api/controller/app', { type: 'TOGGLE_LIKE', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success') {
                         const $icon = $self.find('iconify-icon');
                         const $count = $self.find('.like-count');
@@ -241,7 +241,7 @@ $(document).ready(function() {
                 break;
 
             case 'save-post':
-                $.post('/api/controller/app', { type: 'SAVE_POST', post_id: postId }, function(data) {
+                $.post('/api/controller/app', { type: 'SAVE_POST', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success') {
                         toast.success(data.message);
                         $self.find('span').text(data.saved ? 'Bỏ lưu' : 'Lưu bài viết');
@@ -251,7 +251,7 @@ $(document).ready(function() {
 
             case 'report-post':
                 toast.info('Đang gửi báo cáo...');
-                $.post('/api/controller/app', { type: 'REPORT_ENTITY', target_type: 'post', target_id: postId, reason: 'Spam' }, function(data) {
+                $.post('/api/controller/app', { type: 'REPORT_ENTITY', target_type: 'post', target_id: postId, reason: 'Spam', csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success') toast.success(data.message);
                 }, 'json');
                 break;
@@ -269,7 +269,7 @@ $(document).ready(function() {
                 break;
 
             case 'toggle-comment-like':
-                $.post('/api/controller/app', { type: 'TOGGLE_COMMENT_LIKE', comment_id: commentId }, function(data) {
+                $.post('/api/controller/app', { type: 'TOGGLE_COMMENT_LIKE', comment_id: commentId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success') {
                         $self.toggleClass('text-vanixjnk', data.liked);
                         $self.find('.comment-like-count').text(data.like_count);
@@ -279,7 +279,7 @@ $(document).ready(function() {
 
             case 'delete-comment':
                 if (!confirm('Xóa bình luận này?')) return;
-                $.post('/api/controller/app', { type: 'DELETE_COMMENT', comment_id: commentId }, function(data) {
+                $.post('/api/controller/app', { type: 'DELETE_COMMENT', comment_id: commentId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success') {
                         toast.success(data.message);
                         setTimeout(() => window.location.reload(), 400);
@@ -306,7 +306,11 @@ $(document).ready(function() {
         const original = $btn.html();
         $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
 
-        $.post('/api/controller/app', $form.serialize(), function(data) {
+        const $formForSerialize = $form;
+        if ($formForSerialize.find('input[name="csrf_token"]').length === 0) {
+            $formForSerialize.append('<input type="hidden" name="csrf_token" value="' + (window.CSRF_TOKEN || '') + '">');
+        }
+        $.post('/api/controller/app', $formForSerialize.serialize(), function(data) {
             if (data && data.status === 'success') {
                 toast.success(data.message);
                 setTimeout(() => window.location.reload(), 600);

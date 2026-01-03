@@ -35,7 +35,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
 <script>
 $(document).ready(function() {
     function loadNotifications() {
-        $.post('/api/controller/app', { type: 'GET_NOTIFICATIONS', limit: 50 }, function(data) {
+        $.post('/api/controller/app', { type: 'GET_NOTIFICATIONS', limit: 50, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
             if (data.status === 'success') {
                 const notifications = data.notifications || [];
                 const $container = $('#notifications-container');
@@ -69,11 +69,10 @@ $(document).ready(function() {
                 
                 $container.html(html);
                 
-                // Click to mark as read
                 $container.find('[data-notification-id]').on('click', function() {
                     const notifId = $(this).data('notification-id');
                     if ($(this).hasClass('bg-vanixjnk/5')) {
-                        $.post('/api/controller/app', { type: 'MARK_NOTIFICATION_READ', notification_id: notifId }, function(data) {
+                        $.post('/api/controller/app', { type: 'MARK_NOTIFICATION_READ', notification_id: notifId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                             if (data.status === 'success') {
                                 $(this).removeClass('bg-vanixjnk/5').addClass('bg-card');
                                 $(this).find('.rounded-full').remove();
@@ -102,7 +101,7 @@ $(document).ready(function() {
     }
     
     $('#mark-all-read-btn').on('click', function() {
-        $.post('/api/controller/app', { type: 'MARK_NOTIFICATION_READ', notification_id: 0 }, function(data) {
+        $.post('/api/controller/app', { type: 'MARK_NOTIFICATION_READ', notification_id: 0, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
             if (data.status === 'success') {
                 toast.success('Đã đánh dấu tất cả đã đọc');
                 loadNotifications();
@@ -114,7 +113,6 @@ $(document).ready(function() {
     
     loadNotifications();
     
-    // Auto refresh every 30 seconds
     setInterval(loadNotifications, 30000);
 });
 </script>

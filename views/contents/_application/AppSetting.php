@@ -307,9 +307,14 @@ $(document).ready(function() {
         $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed')
             .html('<span>Đang lưu...</span>');
 
+        const $form = $(this);
+        if ($form.find('input[name="csrf_token"]').length === 0) {
+            $form.append('<input type="hidden" name="csrf_token" value="' + (window.CSRF_TOKEN || '') + '">');
+        }
+
         $.post(
             '/api/controller/app',
-            $(this).serialize(),
+            $form.serialize(),
             function (data) {
                 $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed')
                     .html(originalBtnHtml);
@@ -337,9 +342,14 @@ $(document).ready(function() {
         $btn.addClass('opacity-70 cursor-not-allowed');
         $btn.html('<span>Đang lưu ...</span>');
 
+        const $form = $(this);
+        if ($form.find('input[name="csrf_token"]').length === 0) {
+            $form.append('<input type="hidden" name="csrf_token" value="' + (window.CSRF_TOKEN || '') + '">');
+        }
+
         $.post(
             '/api/controller/app',
-            $(this).serialize(),
+            $form.serialize(),
             function (data) {
                 $btn.prop('disabled', false);
                 $btn.removeClass('opacity-70 cursor-not-allowed');
@@ -376,9 +386,14 @@ $(document).ready(function() {
         $btn.addClass('opacity-70 cursor-not-allowed');
         $btn.html('<span>Đang cập nhật ...</span>');
 
+        const $form = $(this);
+        if ($form.find('input[name="csrf_token"]').length === 0) {
+            $form.append('<input type="hidden" name="csrf_token" value="' + (window.CSRF_TOKEN || '') + '">');
+        }
+
         $.post(
             '/api/controller/app',
-            $(this).serialize(),
+            $form.serialize(),
             function (data) {
                 $btn.prop('disabled', false);
                 $btn.removeClass('opacity-70 cursor-not-allowed');

@@ -111,6 +111,10 @@
                     mediaUrls.forEach(url => {
                         postData.push({ name: 'media[]', value: url });
                     });
+                    const hasToken = postData.some(item => item.name === 'csrf_token');
+                    if (!hasToken) {
+                        postData.push({ name: 'csrf_token', value: window.CSRF_TOKEN || '' });
+                    }
 
                     $.post('/api/controller/app', postData, function(data) {
                         if (data.status === 'success') {
@@ -133,11 +137,11 @@
             });
         });
 
-        // Load unread messages count
         function loadUnreadMessagesCount() {
             <?php if (isset($_SESSION['email']) && !empty($_SESSION['email'])): ?>
             $.post('/api/controller/app', {
-                type: 'GET_UNREAD_COUNT'
+                type: 'GET_UNREAD_COUNT',
+                csrf_token: window.CSRF_TOKEN || ''
             }, function(data) {
                 if (data && data.status === 'success' && data.unread_count !== undefined) {
                     const $badge = $('#unread-messages-badge');
@@ -148,31 +152,26 @@
                     }
                 }
             }, 'json').fail(function() {
-                // Silent fail
             });
             <?php endif; ?>
         }
 
-        // Load notification count
         function loadNotificationCount() {
             <?php if ($__isLoggedIn): ?>
-            $.post('/api/controller/app', { type: 'GET_NOTIFICATIONS', limit: 1 }, function(data) {
+            $.post('/api/controller/app', { type: 'GET_NOTIFICATIONS', limit: 1, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                 if (data.status === 'success' && data.unread_count > 0) {
                     $('#notifications-badge').text(data.unread_count).removeClass('hidden');
                 } else {
                     $('#notifications-badge').addClass('hidden');
                 }
             }, 'json').fail(function() {
-                // Silent fail
             });
             <?php endif; ?>
         }
 
-        // Load unread count on page load
         $(document).ready(function() {
             loadUnreadMessagesCount();
             loadNotificationCount();
-            // Refresh every 10 seconds
             setInterval(loadUnreadMessagesCount, 10000);
             setInterval(loadNotificationCount, 10000);
         });
