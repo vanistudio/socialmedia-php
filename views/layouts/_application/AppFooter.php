@@ -131,6 +131,33 @@
                 });
             });
         });
+
+        // Load unread messages count
+        function loadUnreadMessagesCount() {
+            <?php if (isset($_SESSION['email']) && !empty($_SESSION['email'])): ?>
+            $.post('/api/controller/app', {
+                type: 'GET_UNREAD_COUNT'
+            }, function(data) {
+                if (data && data.status === 'success' && data.unread_count !== undefined) {
+                    const $badge = $('#unread-messages-badge');
+                    if (data.unread_count > 0) {
+                        $badge.text(data.unread_count > 99 ? '99+' : data.unread_count).removeClass('hidden');
+                    } else {
+                        $badge.addClass('hidden');
+                    }
+                }
+            }, 'json').fail(function() {
+                // Silent fail
+            });
+            <?php endif; ?>
+        }
+
+        // Load unread count on page load
+        $(document).ready(function() {
+            loadUnreadMessagesCount();
+            // Refresh every 10 seconds
+            setInterval(loadUnreadMessagesCount, 10000);
+        });
     </script>
 </body>
 

@@ -9,7 +9,7 @@ if ($isLoggedIn) {
     $currentUserId = intval($currentUser['id'] ?? 0);
 }
 $posts = $Vani->get_list("SELECT 
-    p.*, 
+    p.id, p.user_id, p.content, p.visibility, p.created_at,
     u.full_name, u.username, u.avatar,
     (SELECT COUNT(*) FROM `post_likes` WHERE `post_id` = p.id) as like_count,
     (SELECT COUNT(*) FROM `post_comments` WHERE `post_id` = p.id) as comment_count,
@@ -65,167 +65,98 @@ $posts = $Vani->get_list("SELECT
         <?php endif; ?>
 
         <div id="feed-posts" class="space-y-6">
-            <?php foreach ($posts as $post): ?>
-                <div class="bg-card border border-border rounded-2xl shadow-sm" id="post-<?php echo $post['id']; ?>">
-                    <div class="p-4 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <a href="/u/<?php echo htmlspecialchars($post['username']); ?>">
-                                <img src="<?php echo htmlspecialchars($post['avatar']); ?>" alt="Avatar" class="h-10 w-10 rounded-full object-cover">
-                            </a>
-                            <div>
-                                <a href="/u/<?php echo htmlspecialchars($post['username']); ?>" class="font-semibold text-foreground hover:underline"><?php echo htmlspecialchars($post['full_name']); ?></a>
-                                <p class="text-xs text-muted-foreground">@<?php echo htmlspecialchars($post['username']); ?> · <?php echo htmlspecialchars($post['created_at']); ?></p>
-                            </div>
-                        </div>
-                        <div class="relative dropdown-container">
-                            <button type="button" onclick="toggleDropdown('post-menu-<?php echo $post['id']; ?>', this)" class="h-8 w-8 rounded-lg hover:bg-accent transition flex items-center justify-center text-muted-foreground" aria-label="More options">
-                                <iconify-icon icon="solar:menu-dots-bold" width="18"></iconify-icon>
-                            </button>
-                            <div id="post-menu-<?php echo $post['id']; ?>" class="dropdown-menu hidden fixed w-56 bg-card border border-border rounded-xl shadow-lg z-50" data-state="closed">
-                                <ul class="py-1">
-                                    <li>
-                                        <button type="button" data-action="copy-link" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent">
-                                            <iconify-icon icon="solar:link-linear" width="16"></iconify-icon><span>Copy link</span>
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button type="button" data-action="save-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent">
-                                            <iconify-icon icon="solar:bookmark-linear" width="16"></iconify-icon><span><?php echo $post['has_saved'] > 0 ? 'Bỏ lưu' : 'Lưu bài viết'; ?></span>
-                                        </button>
-                                    </li>
-                                    <hr class="my-1 border-border">
-                                    <li>
-                                        <button type="button" data-action="report-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
-                                            <iconify-icon icon="solar:danger-triangle-linear" width="16"></iconify-icon><span>Báo cáo</span>
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <?php if (!empty($post['content'])): ?>
-                        <div class="px-4 pb-4">
-                            <p class="text-foreground whitespace-pre-wrap"><?php echo htmlspecialchars($post['content']); ?></p>
+            <?php foreach ($posts as $post): 
+                $post['user_id'] = intval($post['user_id']);
+                $currentUserId = $isLoggedIn ? intval($currentUser['id']) : 0;
+            ?>
+                <?php include $_SERVER['DOCUMENT_ROOT'] . '/views/components/_post_card.php'; ?>
+                
+                <div class="hidden p-4 border-t border-border space-y-4" id="comments-<?php echo $post['id']; ?>">
+                    <?php if ($isLoggedIn): ?>
+                        <div class="flex items-start gap-3">
+                            <img src="<?php echo htmlspecialchars($currentUser['avatar']); ?>" alt="My Avatar" class="h-8 w-8 rounded-full object-cover">
+                            <form class="flex-1 relative" data-form="add-comment" data-post-id="<?php echo $post['id']; ?>">
+                                <input type="hidden" name="type" value="ADD_COMMENT">
+                                <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
+                                <input type="text" name="content" placeholder="Viết bình luận..." class="w-full h-9 rounded-lg border border-input bg-background px-3 pr-10 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30">
+                                <button type="submit" class="absolute top-1/2 right-2 -translate-y-1/2 h-7 w-7 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 flex items-center justify-center transition">
+                                    <iconify-icon icon="solar:arrow-right-linear" width="18"></iconify-icon>
+                                </button>
+                            </form>
                         </div>
                     <?php endif; ?>
 
-                    <?php
-                    $media = $Vani->get_list("SELECT * FROM `post_media` WHERE `post_id` = '{$post['id']}' ORDER BY `sort_order` ASC");
-                    if (!empty($media)):
-                    ?>
-                        <div class="grid grid-cols-<?php echo count($media) > 1 ? '2' : '1'; ?> gap-0.5 border-y border-border bg-border">
-                            <?php foreach ($media as $item): ?>
-                                <a href="<?php echo htmlspecialchars($item['media_url']); ?>" target="_blank" class="bg-background">
-                                    <img src="<?php echo htmlspecialchars($item['media_url']); ?>" alt="Post media" class="w-full h-auto max-h-[500px] object-cover">
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
+                    <div class="space-y-3 comment-list">
+                        <?php
+                        $comments = $Vani->get_list("SELECT c.*, u.full_name, u.username, u.avatar,
+                            (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id) AS like_count,
+                            (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id AND cl.user_id = '$currentUserId') AS has_liked
+                            FROM `post_comments` c 
+                            JOIN `users` u ON c.user_id = u.id
+                            WHERE c.post_id = '{$post['id']}' AND c.parent_id IS NULL
+                            ORDER BY c.created_at ASC");
 
-                    <div class="p-2 flex justify-around">
-                        <button type="button" data-action="toggle-like" data-post-id="<?php echo $post['id']; ?>" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-accent transition <?php echo $post['has_liked'] > 0 ? 'text-vanixjnk' : 'text-muted-foreground'; ?>">
-                            <iconify-icon icon="<?php echo $post['has_liked'] > 0 ? 'solar:heart-bold' : 'solar:heart-linear'; ?>" width="20"></iconify-icon>
-                            <span class="text-sm font-medium like-count"><?php echo $post['like_count']; ?></span>
-                        </button>
-                        <button type="button" data-action="toggle-comments" data-post-id="<?php echo $post['id']; ?>" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-accent transition text-muted-foreground">
-                            <iconify-icon icon="solar:chat-dots-linear" width="20"></iconify-icon>
-                            <span class="text-sm font-medium comment-count"><?php echo $post['comment_count']; ?></span>
-                        </button>
-                        <button type="button" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-accent transition text-muted-foreground" onclick="toast.info('Đang phát triển')">
-                            <iconify-icon icon="solar:share-linear" width="20"></iconify-icon>
-                            <span class="text-sm font-medium">Chia sẻ</span>
-                        </button>
-                    </div>
-
-                    <div class="hidden p-4 border-t border-border space-y-4" id="comments-<?php echo $post['id']; ?>">
-                        <?php if ($isLoggedIn): ?>
-                            <div class="flex items-start gap-3">
-                                <img src="<?php echo htmlspecialchars($currentUser['avatar']); ?>" alt="My Avatar" class="h-8 w-8 rounded-full object-cover">
-                                <form class="flex-1 relative" data-form="add-comment" data-post-id="<?php echo $post['id']; ?>">
-                                    <input type="hidden" name="type" value="ADD_COMMENT">
-                                    <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                                    <input type="text" name="content" placeholder="Viết bình luận..." class="w-full h-9 rounded-lg border border-input bg-background px-3 pr-10 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30">
-                                    <button type="submit" class="absolute top-1/2 right-2 -translate-y-1/2 h-7 w-7 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 flex items-center justify-center transition">
-                                        <iconify-icon icon="solar:arrow-right-linear" width="18"></iconify-icon>
-                                    </button>
-                                </form>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="space-y-3 comment-list">
-                            <?php
-                            $comments = $Vani->get_list("SELECT c.*, u.full_name, u.username, u.avatar,
+                        foreach ($comments as $comment):
+                            $replies = $Vani->get_list("SELECT c.*, u.full_name, u.username, u.avatar,
                                 (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id) AS like_count,
                                 (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id AND cl.user_id = '$currentUserId') AS has_liked
                                 FROM `post_comments` c 
                                 JOIN `users` u ON c.user_id = u.id
-                                WHERE c.post_id = '{$post['id']}' AND c.parent_id IS NULL
+                                WHERE c.post_id = '{$post['id']}' AND c.parent_id = '{$comment['id']}'
                                 ORDER BY c.created_at ASC");
+                        ?>
+                            <div class="space-y-2">
+                                <div class="flex items-start gap-3">
+                                    <a href="/u/<?php echo htmlspecialchars($comment['username']); ?>">
+                                        <img src="<?php echo htmlspecialchars($comment['avatar']); ?>" alt="Avatar" class="h-8 w-8 rounded-full object-cover">
+                                    </a>
+                                    <div class="flex-1">
+                                        <div class="bg-accent/50 rounded-xl px-3 py-2">
+                                            <a href="/u/<?php echo htmlspecialchars($comment['username']); ?>" class="font-semibold text-foreground text-sm hover:underline"><?php echo htmlspecialchars($comment['full_name']); ?></a>
+                                            <p class="text-sm text-foreground"><?php echo htmlspecialchars($comment['content']); ?></p>
+                                        </div>
+                                        <div class="flex items-center gap-3 text-xs text-muted-foreground mt-1 px-2">
+                                            <button type="button" data-action="toggle-comment-like" data-comment-id="<?php echo $comment['id']; ?>" class="hover:underline <?php echo ($comment['has_liked'] > 0) ? 'text-vanixjnk' : ''; ?>">
+                                                Thích <span class="comment-like-count"><?php echo intval($comment['like_count']); ?></span>
+                                            </button>
+                                            <button type="button" class="hover:underline" data-action="reply-comment" data-post-id="<?php echo $post['id']; ?>" data-parent-id="<?php echo $comment['id']; ?>" data-username="<?php echo htmlspecialchars($comment['username']); ?>">Trả lời</button>
+                                            <?php if ($currentUserId && intval($comment['user_id']) === $currentUserId): ?>
+                                                <button type="button" class="hover:underline text-red-500" data-action="delete-comment" data-comment-id="<?php echo $comment['id']; ?>">Xóa</button>
+                                            <?php endif; ?>
+                                            <span><?php echo htmlspecialchars($comment['created_at']); ?></span>
+                                        </div>
 
-                            foreach ($comments as $comment):
-                                $replies = $Vani->get_list("SELECT c.*, u.full_name, u.username, u.avatar,
-                                    (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id) AS like_count,
-                                    (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id AND cl.user_id = '$currentUserId') AS has_liked
-                                    FROM `post_comments` c 
-                                    JOIN `users` u ON c.user_id = u.id
-                                    WHERE c.post_id = '{$post['id']}' AND c.parent_id = '{$comment['id']}'
-                                    ORDER BY c.created_at ASC");
-                            ?>
-                                <div class="space-y-2">
-                                    <div class="flex items-start gap-3">
-                                        <a href="/u/<?php echo htmlspecialchars($comment['username']); ?>">
-                                            <img src="<?php echo htmlspecialchars($comment['avatar']); ?>" alt="Avatar" class="h-8 w-8 rounded-full object-cover">
-                                        </a>
-                                        <div class="flex-1">
-                                            <div class="bg-accent/50 rounded-xl px-3 py-2">
-                                                <a href="/u/<?php echo htmlspecialchars($comment['username']); ?>" class="font-semibold text-foreground text-sm hover:underline"><?php echo htmlspecialchars($comment['full_name']); ?></a>
-                                                <p class="text-sm text-foreground"><?php echo htmlspecialchars($comment['content']); ?></p>
-                                            </div>
-                                            <div class="flex items-center gap-3 text-xs text-muted-foreground mt-1 px-2">
-                                                <button type="button" data-action="toggle-comment-like" data-comment-id="<?php echo $comment['id']; ?>" class="hover:underline <?php echo ($comment['has_liked'] > 0) ? 'text-vanixjnk' : ''; ?>">
-                                                    Thích <span class="comment-like-count"><?php echo intval($comment['like_count']); ?></span>
-                                                </button>
-                                                <button type="button" class="hover:underline" data-action="reply-comment" data-post-id="<?php echo $post['id']; ?>" data-parent-id="<?php echo $comment['id']; ?>" data-username="<?php echo htmlspecialchars($comment['username']); ?>">Trả lời</button>
-                                                <?php if ($currentUserId && intval($comment['user_id']) === $currentUserId): ?>
-                                                    <button type="button" class="hover:underline text-red-500" data-action="delete-comment" data-comment-id="<?php echo $comment['id']; ?>">Xóa</button>
-                                                <?php endif; ?>
-                                                <span><?php echo htmlspecialchars($comment['created_at']); ?></span>
-                                            </div>
-
-                                            <?php if (!empty($replies)): ?>
-                                                <div class="mt-2 space-y-2 pl-6 border-l border-border">
-                                                    <?php foreach ($replies as $reply): ?>
-                                                        <div class="flex items-start gap-3">
-                                                            <a href="/u/<?php echo htmlspecialchars($reply['username']); ?>">
-                                                                <img src="<?php echo htmlspecialchars($reply['avatar']); ?>" alt="Avatar" class="h-7 w-7 rounded-full object-cover">
-                                                            </a>
-                                                            <div class="flex-1">
-                                                                <div class="bg-accent/40 rounded-xl px-3 py-2">
-                                                                    <a href="/u/<?php echo htmlspecialchars($reply['username']); ?>" class="font-semibold text-foreground text-sm hover:underline"><?php echo htmlspecialchars($reply['full_name']); ?></a>
-                                                                    <p class="text-sm text-foreground"><?php echo htmlspecialchars($reply['content']); ?></p>
-                                                                </div>
-                                                                <div class="flex items-center gap-3 text-xs text-muted-foreground mt-1 px-2">
-                                                                    <button type="button" data-action="toggle-comment-like" data-comment-id="<?php echo $reply['id']; ?>" class="hover:underline <?php echo ($reply['has_liked'] > 0) ? 'text-vanixjnk' : ''; ?>">
-                                                                        Thích <span class="comment-like-count"><?php echo intval($reply['like_count']); ?></span>
-                                                                    </button>
-                                                                    <button type="button" class="hover:underline" data-action="reply-comment" data-post-id="<?php echo $post['id']; ?>" data-parent-id="<?php echo $reply['id']; ?>" data-username="<?php echo htmlspecialchars($reply['username']); ?>">Trả lời</button>
-                                                                    <?php if ($currentUserId && intval($reply['user_id']) === $currentUserId): ?>
-                                                                        <button type="button" class="hover:underline text-red-500" data-action="delete-comment" data-comment-id="<?php echo $reply['id']; ?>">Xóa</button>
-                                                                    <?php endif; ?>
-                                                                    <span><?php echo htmlspecialchars($reply['created_at']); ?></span>
-                                                                </div>
+                                        <?php if (!empty($replies)): ?>
+                                            <div class="mt-2 space-y-2 pl-6 border-l border-border">
+                                                <?php foreach ($replies as $reply): ?>
+                                                    <div class="flex items-start gap-3">
+                                                        <a href="/u/<?php echo htmlspecialchars($reply['username']); ?>">
+                                                            <img src="<?php echo htmlspecialchars($reply['avatar']); ?>" alt="Avatar" class="h-7 w-7 rounded-full object-cover">
+                                                        </a>
+                                                        <div class="flex-1">
+                                                            <div class="bg-accent/40 rounded-xl px-3 py-2">
+                                                                <a href="/u/<?php echo htmlspecialchars($reply['username']); ?>" class="font-semibold text-foreground text-sm hover:underline"><?php echo htmlspecialchars($reply['full_name']); ?></a>
+                                                                <p class="text-sm text-foreground"><?php echo htmlspecialchars($reply['content']); ?></p>
+                                                            </div>
+                                                            <div class="flex items-center gap-3 text-xs text-muted-foreground mt-1 px-2">
+                                                                <button type="button" data-action="toggle-comment-like" data-comment-id="<?php echo $reply['id']; ?>" class="hover:underline <?php echo ($reply['has_liked'] > 0) ? 'text-vanixjnk' : ''; ?>">
+                                                                    Thích <span class="comment-like-count"><?php echo intval($reply['like_count']); ?></span>
+                                                                </button>
+                                                                <button type="button" class="hover:underline" data-action="reply-comment" data-post-id="<?php echo $post['id']; ?>" data-parent-id="<?php echo $reply['id']; ?>" data-username="<?php echo htmlspecialchars($reply['username']); ?>">Trả lời</button>
+                                                                <?php if ($currentUserId && intval($reply['user_id']) === $currentUserId): ?>
+                                                                    <button type="button" class="hover:underline text-red-500" data-action="delete-comment" data-comment-id="<?php echo $reply['id']; ?>">Xóa</button>
+                                                                <?php endif; ?>
+                                                                <span><?php echo htmlspecialchars($reply['created_at']); ?></span>
                                                             </div>
                                                         </div>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                            <?php endif; ?>
-
-                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -239,10 +170,51 @@ $posts = $Vani->get_list("SELECT
     </div>
 </div>
 
+<div id="edit-post-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog data-state="closed">
+    <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
+    <div class="relative w-full max-w-xl mx-auto" data-dialog-content>
+        <div class="bg-card border border-border rounded-2xl shadow-lg" data-dialog-inner>
+            <div class="flex items-center justify-between p-4 border-b border-border">
+                <h3 class="text-lg font-semibold text-foreground">Chỉnh sửa bài viết</h3>
+                <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent transition flex items-center justify-center" data-dialog-close>
+                    <iconify-icon icon="solar:close-circle-linear" width="22"></iconify-icon>
+                </button>
+            </div>
+            <form id="edit-post-form" class="p-4">
+                <input type="hidden" name="type" value="UPDATE_POST">
+                <input type="hidden" name="post_id" id="edit-post-id">
+                <div class="space-y-4">
+                    <div>
+                        <textarea name="content" id="edit-post-content" placeholder="Bạn đang nghĩ gì?" class="w-full bg-transparent text-foreground placeholder:text-muted-foreground outline-none resize-none text-lg min-h-[120px] border border-input rounded-lg p-3"></textarea>
+                        <div id="edit-post-media-previews" class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-4 border-t border-border">
+                        <div class="flex gap-1 text-muted-foreground">
+                            <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent hover:text-vanixjnk transition flex items-center justify-center" aria-label="Add media" onclick="$('#edit-post-media-upload').click()">
+                                <iconify-icon icon="solar:gallery-wide-linear" width="20"></iconify-icon>
+                            </button>
+                            <input type="file" id="edit-post-media-upload" accept="image/*,video/*" class="hidden" multiple>
+                        </div>
+                        <button type="submit" class="h-9 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium">Cập nhật</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 $(document).ready(function() {
     const currentUserId = <?php echo $currentUserId; ?>;
     let postMediaFiles = [];
+    let editPostMediaFiles = [];
+    let editPostMediaUrls = [];
+    let editPostDialog = null;
+    
+    if (window.initDialog) {
+        editPostDialog = window.initDialog('edit-post-dialog');
+    }
+    
     $('#post-media-upload').on('change', function(e) {
         postMediaFiles = Array.from(e.target.files);
         const previews = $('#post-media-previews');
@@ -250,6 +222,85 @@ $(document).ready(function() {
         postMediaFiles.forEach(file => {
             const url = URL.createObjectURL(file);
             previews.append(`<div class="relative"><img src="${url}" class="h-24 w-full object-cover rounded-lg"></div>`);
+        });
+    });
+    
+    $('#edit-post-media-upload').on('change', function(e) {
+        editPostMediaFiles = Array.from(e.target.files);
+        editPostMediaFiles.forEach(file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            $.ajax({
+                url: '/api/controller/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data && data.status === 'success' && data.url) {
+                        editPostMediaUrls.push(data.url);
+                        renderEditPostMedia();
+                    }
+                }
+            });
+        });
+    });
+    
+    function renderEditPostMedia() {
+        const previews = $('#edit-post-media-previews');
+        previews.empty();
+        editPostMediaUrls.forEach((url, index) => {
+            previews.append(`
+                <div class="relative">
+                    <img src="${url}" class="h-24 w-full object-cover rounded-lg">
+                    <button type="button" class="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive text-white flex items-center justify-center" onclick="removeEditMedia(${index})">
+                        <iconify-icon icon="solar:close-circle-linear" width="14"></iconify-icon>
+                    </button>
+                </div>
+            `);
+        });
+    }
+    
+    window.removeEditMedia = function(index) {
+        editPostMediaUrls.splice(index, 1);
+        renderEditPostMedia();
+    };
+    
+    $('#edit-post-form').on('submit', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('button[type=submit]');
+        const originalBtnText = $btn.text();
+        const content = $form.find('textarea[name=content]').val();
+        
+        if (content.trim() === '' && editPostMediaUrls.length === 0) {
+            toast.error('Bài viết không được để trống');
+            return;
+        }
+        
+        $btn.prop('disabled', true).addClass('opacity-70').text('Đang cập nhật...');
+        
+        let postData = $form.serializeArray();
+        editPostMediaUrls.forEach(url => {
+            postData.push({ name: 'media[]', value: url });
+        });
+        
+        $.post('/api/controller/app', postData, function(data) {
+            if (data.status === 'success') {
+                toast.success(data.message);
+                if (editPostDialog) {
+                    editPostDialog.close();
+                } else {
+                    $('#edit-post-dialog').addClass('hidden').removeClass('flex');
+                }
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(function() {
+            toast.error('Không thể kết nối');
+        }).always(function() {
+            $btn.prop('disabled', false).removeClass('opacity-70').text(originalBtnText);
         });
     });
     $('#create-post-form').on('submit', function(e) {
@@ -310,12 +361,48 @@ $(document).ready(function() {
         const commentId = $(this).data('comment-id');
         const $self = $(this);
 
-        if (!currentUserId && ['toggle-like','save-post','report-post','reply-comment','toggle-comment-like','delete-comment'].includes(action)) {
+        if (!currentUserId && ['toggle-like','save-post','report-post','reply-comment','toggle-comment-like','delete-comment','edit-post','delete-post'].includes(action)) {
             toast.error('Vui lòng đăng nhập để thực hiện');
             return;
         }
 
         switch (action) {
+            case 'edit-post':
+                const $postCard = $(`#post-${postId}`);
+                const postContent = $postCard.find('.px-4.pb-4 p').text().trim() || '';
+                const postMedia = [];
+                $postCard.find('.grid img').each(function() {
+                    postMedia.push($(this).attr('src'));
+                });
+                
+                $('#edit-post-id').val(postId);
+                $('#edit-post-content').val(postContent);
+                editPostMediaUrls = postMedia;
+                editPostMediaFiles = [];
+                renderEditPostMedia();
+                
+                if (editPostDialog) {
+                    editPostDialog.open();
+                } else {
+                    $('#edit-post-dialog').removeClass('hidden').addClass('flex');
+                }
+                break;
+
+            case 'delete-post':
+                if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
+                $.post('/api/controller/app', { type: 'DELETE_POST', post_id: postId }, function(data) {
+                    if (data.status === 'success') {
+                        toast.success(data.message);
+                        $(`#post-${postId}`).fadeOut(300, function() {
+                            $(this).remove();
+                        });
+                    } else {
+                        toast.error(data.message || 'Có lỗi xảy ra');
+                    }
+                }, 'json').fail(function() {
+                    toast.error('Không thể kết nối tới máy chủ');
+                });
+                break;
             case 'toggle-like':
                 $.post('/api/controller/app', { type: 'TOGGLE_LIKE', post_id: postId }, function(data) {
                     if (data.status === 'success') {

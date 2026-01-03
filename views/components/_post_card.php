@@ -15,10 +15,45 @@
             </button>
             <div id="post-menu-<?php echo $post['id']; ?>" class="dropdown-menu hidden fixed w-56 bg-card border border-border rounded-xl shadow-lg z-50" data-state="closed">
                 <ul class="py-1">
-                    <li><button type="button" data-action="copy-link" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent"><iconify-icon icon="solar:link-linear" width="16"></iconify-icon><span>Copy link</span></button></li>
-                    <li><button type="button" data-action="save-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent"><iconify-icon icon="solar:bookmark-linear" width="16"></iconify-icon><span><?php echo ($post['has_saved'] ?? 0) > 0 ? 'Bỏ lưu' : 'Lưu bài viết'; ?></span></button></li>
-                    <hr class="my-1 border-border">
-                    <li><button type="button" data-action="report-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10"><iconify-icon icon="solar:danger-triangle-linear" width="16"></iconify-icon><span>Báo cáo</span></button></li>
+                    <?php 
+                    $isPostOwner = isset($currentUserId) && isset($post['user_id']) && intval($currentUserId) === intval($post['user_id']);
+                    ?>
+                    <?php if ($isPostOwner): ?>
+                        <li>
+                            <button type="button" data-action="edit-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent">
+                                <iconify-icon icon="solar:pen-linear" width="16"></iconify-icon>
+                                <span>Chỉnh sửa bài viết</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" data-action="delete-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
+                                <iconify-icon icon="solar:trash-bin-trash-linear" width="16"></iconify-icon>
+                                <span>Xóa bài viết</span>
+                            </button>
+                        </li>
+                        <hr class="my-1 border-border">
+                    <?php endif; ?>
+                    <li>
+                        <button type="button" data-action="copy-link" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent">
+                            <iconify-icon icon="solar:link-linear" width="16"></iconify-icon>
+                            <span>Copy link</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" data-action="save-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent">
+                            <iconify-icon icon="solar:bookmark-linear" width="16"></iconify-icon>
+                            <span><?php echo ($post['has_saved'] ?? 0) > 0 ? 'Bỏ lưu' : 'Lưu bài viết'; ?></span>
+                        </button>
+                    </li>
+                    <?php if (!$isPostOwner): ?>
+                        <hr class="my-1 border-border">
+                        <li>
+                            <button type="button" data-action="report-post" data-post-id="<?php echo $post['id']; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
+                                <iconify-icon icon="solar:danger-triangle-linear" width="16"></iconify-icon>
+                                <span>Báo cáo</span>
+                            </button>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -53,22 +88,6 @@
             <iconify-icon icon="solar:share-linear" width="20"></iconify-icon>
             <span class="text-sm font-medium">Chia sẻ</span>
         </button>
-    </div>
-    <div class="hidden p-4 border-t border-border space-y-4" id="comments-<?php echo $post['id']; ?>">
-        <?php if (isset($currentUser)): ?>
-            <div class="flex items-start gap-3">
-                <img src="<?php echo htmlspecialchars($currentUser['avatar']); ?>" alt="My Avatar" class="h-8 w-8 rounded-full object-cover">
-                <form class="flex-1 relative" data-form="add-comment" data-post-id="<?php echo $post['id']; ?>">
-                    <input type="hidden" name="type" value="ADD_COMMENT">
-                    <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                    <input type="text" name="content" placeholder="Viết bình luận..." class="w-full h-9 rounded-lg border border-input bg-background px-3 pr-10 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30">
-                    <button type="submit" class="absolute top-1/2 right-2 -translate-y-1/2 h-7 w-7 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 flex items-center justify-center transition">
-                        <iconify-icon icon="solar:arrow-right-linear" width="18"></iconify-icon>
-                    </button>
-                </form>
-            </div>
-        <?php endif; ?>
-        <div class="space-y-3 comment-list"></div>
     </div>
 </div>
 

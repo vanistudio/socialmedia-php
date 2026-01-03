@@ -24,12 +24,22 @@ $authRequiredTypes = [
     'UPDATE_PROFILE',
     'CHANGE_PASSWORD',
     'CREATE_POST',
+    'UPDATE_POST',
+    'DELETE_POST',
+    'GET_POST',
     'TOGGLE_LIKE',
     'ADD_COMMENT',
     'SAVE_POST',
     'REPORT_ENTITY',
     'TOGGLE_COMMENT_LIKE',
     'DELETE_COMMENT',
+    'GET_CONVERSATIONS',
+    'CREATE_CONVERSATION',
+    'GET_MESSAGES',
+    'SEND_MESSAGE',
+    'MARK_READ',
+    'GET_UNREAD_COUNT',
+    'SEARCH_USERS',
 ];
 
 if (in_array($type, $authRequiredTypes, true)) {
@@ -151,6 +161,108 @@ if ($type === 'CREATE_POST') {
     }
 
     json_success('Đăng bài thành công', ['post_id' => intval($postId)]);
+}
+
+if ($type === 'UPDATE_POST') {
+    $post_id = intval($_POST['post_id'] ?? 0);
+    $content = check_string2($_POST['content'] ?? '');
+    $visibility = check_string2($_POST['visibility'] ?? 'public');
+    
+    if ($post_id <= 0) json_error('post_id không hợp lệ');
+    
+    $post = $Vani->get_row("SELECT * FROM `posts` WHERE `id` = '$post_id'");
+    if (!$post) json_error('Bài viết không tồn tại');
+    
+    $uid = intval($currentUser['id']);
+    if (intval($post['user_id']) !== $uid) {
+        json_error('Bạn không có quyền chỉnh sửa bài viết này');
+    }
+    
+    $media = $_POST['media'] ?? [];
+    if (!is_array($media)) $media = [];
+    
+    $mediaClean = [];
+    foreach ($media as $m) {
+        $m = trim($m);
+        if ($m !== '') $mediaClean[] = $m;
+    }
+    
+    if ($content === '' && count($mediaClean) === 0) {
+        json_error('Bài viết không được để trống');
+    }
+    
+    $allowedVisibility = ['public', 'followers', 'private'];
+    if (!in_array($visibility, $allowedVisibility, true)) {
+        $visibility = 'public';
+    }
+    
+    $Vani->update('posts', [
+        'content' => $content,
+        'visibility' => $visibility,
+    ], "`id` = '$post_id'");
+    
+    $Vani->remove('post_media', "`post_id` = '$post_id'");
+    
+    $sort = 0;
+    foreach ($mediaClean as $url) {
+        $sort++;
+        $mediaType = 'image';
+        $lower = strtolower($url);
+        if (preg_match('/\.(mp4|webm|mov)(\?|$)/', $lower)) {
+            $mediaType = 'video';
+        }
+        
+        $Vani->insert('post_media', [
+            'post_id' => intval($post_id),
+            'media_url' => $url,
+            'media_type' => $mediaType,
+            'sort_order' => $sort,
+        ]);
+    }
+    
+    json_success('Cập nhật bài viết thành công', ['post_id' => intval($post_id)]);
+}
+
+if ($type === 'DELETE_POST') {
+    $post_id = intval($_POST['post_id'] ?? 0);
+    if ($post_id <= 0) json_error('post_id không hợp lệ');
+    
+    $post = $Vani->get_row("SELECT * FROM `posts` WHERE `id` = '$post_id'");
+    if (!$post) json_error('Bài viết không tồn tại');
+    
+    $uid = intval($currentUser['id']);
+    if (intval($post['user_id']) !== $uid) {
+        json_error('Bạn không có quyền xóa bài viết này');
+    }
+    
+    $Vani->remove('posts', "`id` = '$post_id'");
+    
+    json_success('Đã xóa bài viết');
+}
+
+if ($type === 'GET_POST') {
+    $post_id = intval($_POST['post_id'] ?? 0);
+    if ($post_id <= 0) json_error('post_id không hợp lệ');
+    
+    $post = $Vani->get_row("SELECT * FROM `posts` WHERE `id` = '$post_id'");
+    if (!$post) json_error('Bài viết không tồn tại');
+    
+    $uid = intval($currentUser['id']);
+    if (intval($post['user_id']) !== $uid) {
+        json_error('Bạn không có quyền xem bài viết này');
+    }
+    
+    $media = $Vani->get_list("SELECT media_url FROM `post_media` WHERE `post_id` = '$post_id' ORDER BY `sort_order` ASC");
+    $mediaUrls = array_column($media, 'media_url');
+    
+    json_success('Lấy bài viết thành công', [
+        'post' => [
+            'id' => intval($post['id']),
+            'content' => $post['content'],
+            'visibility' => $post['visibility'],
+            'media' => $mediaUrls,
+        ]
+    ]);
 }
 
 if ($type === 'TOGGLE_LIKE') {
@@ -283,6 +395,239 @@ if ($type === 'REPORT_ENTITY') {
     ]);
 
     json_success('Đã gửi báo cáo');
+}
+if ($type === 'GET_CONVERSATIONS') {
+    $uid = intval($currentUser['id']);
+    
+    $conversations = $Vani->get_list("
+        SELECT 
+            c.id,
+            c.type,
+            c.title,
+            c.created_at,
+            (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+            (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_time,
+            (SELECT sender_id FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_sender_id,
+            (SELECT COUNT(*) FROM messages m 
+             LEFT JOIN message_reads mr ON m.id = mr.message_id AND mr.user_id = '$uid'
+             WHERE m.conversation_id = c.id AND m.sender_id != '$uid' AND mr.id IS NULL) as unread_count
+        FROM conversations c
+        INNER JOIN conversation_members cm ON c.id = cm.conversation_id
+        WHERE cm.user_id = '$uid'
+        ORDER BY last_message_time DESC, c.created_at DESC
+    ");
+    
+    $result = [];
+    foreach ($conversations as $conv) {
+        $convId = intval($conv['id']);
+        $otherMembers = $Vani->get_list("
+            SELECT u.id, u.username, u.full_name, u.avatar
+            FROM conversation_members cm
+            JOIN users u ON cm.user_id = u.id
+            WHERE cm.conversation_id = '$convId' AND cm.user_id != '$uid'
+        ");
+        
+        $result[] = [
+            'id' => $convId,
+            'type' => $conv['type'],
+            'title' => $conv['title'],
+            'last_message' => $conv['last_message'],
+            'last_message_time' => $conv['last_message_time'],
+            'last_sender_id' => intval($conv['last_sender_id'] ?? 0),
+            'unread_count' => intval($conv['unread_count'] ?? 0),
+            'members' => $otherMembers,
+        ];
+    }
+    
+    json_success('Lấy danh sách thành công', ['conversations' => $result]);
+}
+
+if ($type === 'CREATE_CONVERSATION') {
+    $target_user_id = intval($_POST['target_user_id'] ?? 0);
+    if ($target_user_id <= 0) json_error('target_user_id không hợp lệ');
+    if ($target_user_id == $currentUser['id']) json_error('Không thể tạo cuộc trò chuyện với chính mình');
+    
+    $targetUser = $Vani->get_row("SELECT * FROM `users` WHERE `id` = '$target_user_id'");
+    if (!$targetUser) json_error('Người dùng không tồn tại');
+    
+    $uid = intval($currentUser['id']);
+    $existing = $Vani->get_row("
+        SELECT c.id
+        FROM conversations c
+        INNER JOIN conversation_members cm1 ON c.id = cm1.conversation_id
+        INNER JOIN conversation_members cm2 ON c.id = cm2.conversation_id
+        WHERE c.type = 'direct'
+        AND cm1.user_id = '$uid'
+        AND cm2.user_id = '$target_user_id'
+        AND (SELECT COUNT(*) FROM conversation_members WHERE conversation_id = c.id) = 2
+    ");
+    
+    if ($existing) {
+        json_success('Cuộc trò chuyện đã tồn tại', ['conversation_id' => intval($existing['id'])]);
+    }
+    $convId = $Vani->insert('conversations', [
+        'type' => 'direct',
+        'title' => null,
+        'created_by' => $uid,
+    ]);
+    
+    if (!$convId) json_error('Không thể tạo cuộc trò chuyện');
+    
+    $Vani->insert('conversation_members', [
+        'conversation_id' => $convId,
+        'user_id' => $uid,
+        'role' => 'member',
+    ]);
+    
+    $Vani->insert('conversation_members', [
+        'conversation_id' => $convId,
+        'user_id' => $target_user_id,
+        'role' => 'member',
+    ]);
+    
+    json_success('Tạo cuộc trò chuyện thành công', ['conversation_id' => intval($convId)]);
+}
+
+if ($type === 'GET_MESSAGES') {
+    $conversation_id = intval($_POST['conversation_id'] ?? 0);
+    if ($conversation_id <= 0) json_error('conversation_id không hợp lệ');
+    
+    $uid = intval($currentUser['id']);
+    $member = $Vani->get_row("SELECT * FROM conversation_members WHERE conversation_id = '$conversation_id' AND user_id = '$uid'");
+    if (!$member) json_error('Bạn không có quyền xem cuộc trò chuyện này');
+    
+    $limit = intval($_POST['limit'] ?? 50);
+    $offset = intval($_POST['offset'] ?? 0);
+    if ($limit > 100) $limit = 100;
+    
+    $messages = $Vani->get_list("
+        SELECT 
+            m.id,
+            m.sender_id,
+            m.content,
+            m.media_url,
+            m.created_at,
+            u.username,
+            u.full_name,
+            u.avatar,
+            (SELECT COUNT(*) FROM message_reads WHERE message_id = m.id AND user_id = '$uid') as is_read
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE m.conversation_id = '$conversation_id'
+        ORDER BY m.created_at DESC
+        LIMIT $limit OFFSET $offset
+    ");
+    
+    $result = array_reverse($messages);
+    
+    json_success('Lấy tin nhắn thành công', ['messages' => $result]);
+}
+
+if ($type === 'SEND_MESSAGE') {
+    $conversation_id = intval($_POST['conversation_id'] ?? 0);
+    $content = check_string2($_POST['content'] ?? '');
+    $media_url = check_string2($_POST['media_url'] ?? '');
+    
+    if ($conversation_id <= 0) json_error('conversation_id không hợp lệ');
+    if ($content === '' && $media_url === '') json_error('Nội dung hoặc media không được để trống');
+    
+    $uid = intval($currentUser['id']);
+    $member = $Vani->get_row("SELECT * FROM conversation_members WHERE conversation_id = '$conversation_id' AND user_id = '$uid'");
+    if (!$member) json_error('Bạn không có quyền gửi tin nhắn trong cuộc trò chuyện này');
+    
+    $messageData = [
+        'conversation_id' => $conversation_id,
+        'sender_id' => $uid,
+        'content' => $content ?: null,
+        'media_url' => $media_url ?: null,
+    ];
+    
+    $messageId = $Vani->insert('messages', $messageData);
+    if (!$messageId) json_error('Không thể gửi tin nhắn');
+    $message = $Vani->get_row("
+        SELECT 
+            m.id,
+            m.sender_id,
+            m.content,
+            m.media_url,
+            m.created_at,
+            u.username,
+            u.full_name,
+            u.avatar
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE m.id = '$messageId'
+    ");
+    
+    json_success('Gửi tin nhắn thành công', ['message' => $message]);
+}
+
+if ($type === 'MARK_READ') {
+    $conversation_id = intval($_POST['conversation_id'] ?? 0);
+    if ($conversation_id <= 0) json_error('conversation_id không hợp lệ');
+    
+    $uid = intval($currentUser['id']);
+    $messages = $Vani->get_list("
+        SELECT m.id
+        FROM messages m
+        WHERE m.conversation_id = '$conversation_id'
+        AND m.sender_id != '$uid'
+        AND m.id NOT IN (SELECT message_id FROM message_reads WHERE user_id = '$uid')
+    ");
+    
+    foreach ($messages as $msg) {
+        $msgId = intval($msg['id']);
+        $existing = $Vani->get_row("SELECT * FROM message_reads WHERE message_id = '$msgId' AND user_id = '$uid'");
+        if (!$existing) {
+            $Vani->insert('message_reads', [
+                'message_id' => $msgId,
+                'user_id' => $uid,
+            ]);
+        }
+    }
+    
+    json_success('Đã đánh dấu đã đọc');
+}
+
+if ($type === 'GET_UNREAD_COUNT') {
+    $uid = intval($currentUser['id']);
+    
+    $unreadCount = $Vani->num_rows("
+        SELECT m.id
+        FROM messages m
+        LEFT JOIN message_reads mr ON m.id = mr.message_id AND mr.user_id = '$uid'
+        INNER JOIN conversation_members cm ON m.conversation_id = cm.conversation_id
+        WHERE cm.user_id = '$uid'
+        AND m.sender_id != '$uid'
+        AND mr.id IS NULL
+    ") ?: 0;
+    
+    json_success('Lấy số tin nhắn chưa đọc thành công', ['unread_count' => intval($unreadCount)]);
+}
+
+if ($type === 'SEARCH_USERS') {
+    $query = check_string($_POST['query'] ?? '');
+    if (strlen($query) < 2) json_error('Query phải có ít nhất 2 ký tự');
+    
+    $uid = intval($currentUser['id']);
+    $queryEscaped = addslashes($query);
+    
+    $users = $Vani->get_list("
+        SELECT id, username, full_name, avatar
+        FROM users
+        WHERE id != '$uid'
+        AND (username LIKE '%$queryEscaped%' OR full_name LIKE '%$queryEscaped%')
+        ORDER BY 
+            CASE 
+                WHEN username LIKE '$queryEscaped%' THEN 1
+                WHEN full_name LIKE '$queryEscaped%' THEN 2
+                ELSE 3
+            END,
+            username ASC
+        LIMIT 20
+    ");
+    
+    json_success('Tìm kiếm thành công', ['users' => $users]);
 }
 
 json_error('type không hợp lệ');
