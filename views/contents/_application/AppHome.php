@@ -8,15 +8,39 @@ if ($isLoggedIn) {
     $currentUser = $Vani->get_row("SELECT * FROM `users` WHERE `email` = '" . addslashes($_SESSION['email']) . "'");
     $currentUserId = intval($currentUser['id'] ?? 0);
 }
+// Build query with visibility and block filters
+$blockFilter = '';
+if ($isLoggedIn && $currentUserId > 0) {
+    $blockFilter = "AND p.user_id NOT IN (
+        SELECT blocked_id FROM user_blocks WHERE blocker_id = '$currentUserId'
+        UNION
+        SELECT blocker_id FROM user_blocks WHERE blocked_id = '$currentUserId'
+    )";
+}
+
+$visibilityFilter = '';
+if ($isLoggedIn && $currentUserId > 0) {
+    $visibilityFilter = "AND (
+        p.visibility = 'public' 
+        OR p.user_id = '$currentUserId'
+        OR (p.visibility = 'followers' AND EXISTS (
+            SELECT 1 FROM follows WHERE follower_id = '$currentUserId' AND following_id = p.user_id
+        ))
+    )";
+} else {
+    $visibilityFilter = "AND p.visibility = 'public'";
+}
+
 $posts = $Vani->get_list("SELECT 
     p.id, p.user_id, p.content, p.visibility, p.created_at,
     u.full_name, u.username, u.avatar,
     (SELECT COUNT(*) FROM `post_likes` WHERE `post_id` = p.id) as like_count,
     (SELECT COUNT(*) FROM `post_comments` WHERE `post_id` = p.id) as comment_count,
-    (SELECT COUNT(*) FROM `post_likes` WHERE `post_id` = p.id AND `user_id` = '$currentUserId') as has_liked,
-    (SELECT COUNT(*) FROM `post_bookmarks` WHERE `post_id` = p.id AND `user_id` = '$currentUserId') as has_saved
+    " . ($isLoggedIn ? "(SELECT COUNT(*) FROM `post_likes` WHERE `post_id` = p.id AND `user_id` = '$currentUserId') as has_liked,
+    (SELECT COUNT(*) FROM `post_bookmarks` WHERE `post_id` = p.id AND `user_id` = '$currentUserId') as has_saved" : "0 as has_liked, 0 as has_saved") . "
     FROM `posts` p 
     JOIN `users` u ON p.user_id = u.id
+    WHERE 1=1 $visibilityFilter $blockFilter
     ORDER BY p.created_at DESC
     LIMIT 20");
 ?>
@@ -88,21 +112,29 @@ $posts = $Vani->get_list("SELECT
 
                     <div class="space-y-3 comment-list">
                         <?php
+                        $commentBlockFilter = '';
+                        if ($isLoggedIn && $currentUserId > 0) {
+                            $commentBlockFilter = "AND c.user_id NOT IN (
+                                SELECT blocked_id FROM user_blocks WHERE blocker_id = '$currentUserId'
+                                UNION
+                                SELECT blocker_id FROM user_blocks WHERE blocked_id = '$currentUserId'
+                            )";
+                        }
                         $comments = $Vani->get_list("SELECT c.*, u.full_name, u.username, u.avatar,
                             (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id) AS like_count,
-                            (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id AND cl.user_id = '$currentUserId') AS has_liked
+                            " . ($isLoggedIn ? "(SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id AND cl.user_id = '$currentUserId') AS has_liked" : "0 AS has_liked") . "
                             FROM `post_comments` c 
                             JOIN `users` u ON c.user_id = u.id
-                            WHERE c.post_id = '{$post['id']}' AND c.parent_id IS NULL
+                            WHERE c.post_id = '{$post['id']}' AND c.parent_id IS NULL $commentBlockFilter
                             ORDER BY c.created_at ASC");
 
                         foreach ($comments as $comment):
                             $replies = $Vani->get_list("SELECT c.*, u.full_name, u.username, u.avatar,
                                 (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id) AS like_count,
-                                (SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id AND cl.user_id = '$currentUserId') AS has_liked
+                                " . ($isLoggedIn ? "(SELECT COUNT(*) FROM `comment_likes` cl WHERE cl.comment_id = c.id AND cl.user_id = '$currentUserId') AS has_liked" : "0 AS has_liked") . "
                                 FROM `post_comments` c 
                                 JOIN `users` u ON c.user_id = u.id
-                                WHERE c.post_id = '{$post['id']}' AND c.parent_id = '{$comment['id']}'
+                                WHERE c.post_id = '{$post['id']}' AND c.parent_id = '{$comment['id']}' $commentBlockFilter
                                 ORDER BY c.created_at ASC");
                         ?>
                             <div class="space-y-2">

@@ -255,9 +255,31 @@ if ($type === 'GET_POST') {
     $post = $Vani->get_row("SELECT * FROM `posts` WHERE `id` = '$post_id'");
     if (!$post) json_error('Bài viết không tồn tại');
     
-    $uid = intval($currentUser['id']);
-    if (intval($post['user_id']) !== $uid) {
-        json_error('Bạn không có quyền xem bài viết này');
+    $uid = isset($currentUser) ? intval($currentUser['id']) : 0;
+    $postOwnerId = intval($post['user_id']);
+    $visibility = $post['visibility'] ?? 'public';
+    
+    // Check permission: owner can always view, others can view public posts
+    if ($uid !== $postOwnerId) {
+        if ($visibility !== 'public') {
+            // Check if user is following (for followers visibility)
+            if ($visibility === 'followers' && $uid > 0) {
+                $isFollowing = $Vani->get_row("SELECT id FROM `follows` WHERE `follower_id` = '$uid' AND `following_id` = '$postOwnerId'");
+                if (!$isFollowing) {
+                    json_error('Bạn không có quyền xem bài viết này');
+                }
+            } else {
+                json_error('Bạn không có quyền xem bài viết này');
+            }
+        }
+        
+        // Check if user is blocked
+        if ($uid > 0) {
+            $isBlocked = $Vani->get_row("SELECT id FROM `user_blocks` WHERE (`blocker_id` = '$uid' AND `blocked_id` = '$postOwnerId') OR (`blocker_id` = '$postOwnerId' AND `blocked_id` = '$uid')");
+            if ($isBlocked) {
+                json_error('Bạn không có quyền xem bài viết này');
+            }
+        }
     }
     
     $media = $Vani->get_list("SELECT media_url FROM `post_media` WHERE `post_id` = '$post_id' ORDER BY `sort_order` ASC");
@@ -267,7 +289,7 @@ if ($type === 'GET_POST') {
         'post' => [
             'id' => intval($post['id']),
             'content' => $post['content'],
-            'visibility' => $post['visibility'],
+            'visibility' => $visibility,
             'media' => $mediaUrls,
         ]
     ]);
@@ -821,8 +843,7 @@ if ($type === 'SEARCH_ALL') {
     $users = $Vani->get_list("
         SELECT id, username, full_name, avatar
         FROM users
-        " . ($uid > 0 ? "WHERE id != '$uid'" : "") . "
-        AND (username LIKE '%$queryEscaped%' OR full_name LIKE '%$queryEscaped%')
+        WHERE " . ($uid > 0 ? "id != '$uid' AND " : "") . "(username LIKE '%$queryEscaped%' OR full_name LIKE '%$queryEscaped%')
         ORDER BY 
             CASE 
                 WHEN username LIKE '$queryEscaped%' THEN 1
