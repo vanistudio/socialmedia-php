@@ -47,7 +47,7 @@ if (!empty($_SESSION['email'])) {
                     placeholder="••••••••"
                     class="w-full h-10 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50 hover:border-vanixjnk/30"
                     required>
-                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <iconify-icon icon="solar:eye-closed-linear" class="text-muted-foreground hover:text-foreground transition" width="18"></iconify-icon>
                 </button>
             </div>
@@ -134,6 +134,20 @@ if (!empty($_SESSION['email'])) {
             toast.error('Có lỗi xảy ra', { description: 'Không thể kết nối tới máy chủ.' });
         });
     }
+    $(document).ready(function() {
+        $("#toggle-password").on("click", function() {
+            const $input = $("#password");
+            const $icon = $(this).find("iconify-icon");
+            
+            if ($input.attr("type") === "password") {
+                $input.attr("type", "text");
+                $icon.attr("icon", "solar:eye-linear");
+            } else {
+                $input.attr("type", "password");
+                $icon.attr("icon", "solar:eye-closed-linear");
+            }
+        });
+    });
 </script>
 
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthFooter.php'; ?>
