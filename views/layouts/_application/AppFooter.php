@@ -107,14 +107,31 @@
 
                 Promise.all(mediaUploadPromises).then(results => {
                     let mediaUrls = results.map(res => res.url);
-                    let postData = $form.serializeArray();
-                    mediaUrls.forEach(url => {
-                        postData.push({ name: 'media[]', value: url });
+                    let postDataArray = $form.serializeArray();
+                    
+                    let postData = {};
+                    postDataArray.forEach(item => {
+                        if (item.name.endsWith('[]')) {
+                            const key = item.name.replace('[]', '');
+                            if (!postData[key]) postData[key] = [];
+                            postData[key].push(item.value);
+                        } else {
+                            postData[item.name] = item.value;
+                        }
                     });
-                    const hasToken = postData.some(item => item.name === 'csrf_token');
-                    if (!hasToken) {
-                        postData.push({ name: 'csrf_token', value: window.CSRF_TOKEN || '' });
+                    
+                    if (mediaUrls.length > 0) {
+                        postData.media = mediaUrls;
                     }
+                    
+                    const csrfToken = window.CSRF_TOKEN || '';
+                    if (!csrfToken) {
+                        toast.error('CSRF token không tồn tại. Vui lòng tải lại trang.');
+                        $btn.prop('disabled', false).removeClass('opacity-70').text(originalBtnText);
+                        return;
+                    }
+                    
+                    postData.csrf_token = csrfToken;
 
                     $.post('/api/controller/app', postData, function(data) {
                         if (data.status === 'success') {
