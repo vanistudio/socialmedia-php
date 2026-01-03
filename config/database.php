@@ -53,27 +53,48 @@ class Vani
         $value_list = '';
         foreach ($data as $key => $value) {
             $field_list .= ",$key";
-            $value_list .= ",'" . mysqli_real_escape_string($this->ketnoi, $value) . "'";
+            if ($value === null) {
+                $value_list .= ",NULL";
+            } else {
+                $value_list .= ",'" . mysqli_real_escape_string($this->ketnoi, $value) . "'";
+            }
         }
         $sql = 'INSERT INTO ' . $table . '(' . trim($field_list, ',') . ') VALUES (' . trim($value_list, ',') . ')';
-        return mysqli_query($this->ketnoi, $sql);
+        $ok = mysqli_query($this->ketnoi, $sql);
+        if ($ok) {
+            return mysqli_insert_id($this->ketnoi);
+        }
+        return false;
     }
+
+    function insert_id()
+    {
+        $this->connect();
+        return mysqli_insert_id($this->ketnoi);
+    }
+
     function update($table, $data, $where)
     {
         $this->connect();
         $sql = '';
         foreach ($data as $key => $value) {
-            $sql .= "$key = '" . mysqli_real_escape_string($this->ketnoi, $value) . "',";
+            if ($value === null) {
+                $sql .= "$key = NULL,";
+            } else {
+                $sql .= "$key = '" . mysqli_real_escape_string($this->ketnoi, $value) . "',";
+            }
         }
         $sql = 'UPDATE ' . $table . ' SET ' . trim($sql, ',') . ' WHERE ' . $where;
         return mysqli_query($this->ketnoi, $sql);
     }
+
     function remove($table, $where)
     {
         $this->connect();
         $sql = "DELETE FROM $table WHERE $where";
         return mysqli_query($this->ketnoi, $sql);
     }
+
     function get_list($sql)
     {
         $this->connect();

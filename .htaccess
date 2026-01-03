@@ -9,10 +9,6 @@ Header set X-XSS-Protection "1; mode=block"
 Header set X-Content-Type-Options nosniff
 Header set X-CSRF-Protection "1; mode=block"
 
-#<IfModule mod_alias.c>
-#    RedirectMatch 403 /\.\.(/|\\)
-#</IfModule>
-
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -27,8 +23,12 @@ RewriteRule ^logout$ views/contents/_authentication/AuthLogout.php [L]
 RewriteRule ^api/controller/auth$ controllers/_authentication/AuthController.php [L]
 RewriteRule ^api/controller/app$ controllers/_application/AppController.php [L]
 RewriteRule ^api/controller/upload$ controllers/_application/UploadController.php [L]
+
 # Profile page: /u/{username}
 RewriteRule ^u/([^/]+)$ views/contents/_application/AppProfile.php?username=$1 [L,QSA]
+
+# Post page: /post/{id}
+RewriteRule ^post/([0-9]+)$ views/contents/_application/AppPost.php?id=$1 [L,QSA]
 
 # Settings page: /settings
 RewriteRule ^settings$ views/contents/_application/AppSetting.php [L]

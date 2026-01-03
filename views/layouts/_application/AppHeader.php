@@ -27,4 +27,4 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
 <body class="bg-background text-foreground font-sans antialiased">
     <div id="app" class="min-h-screen flex flex-col">
         <?php include 'AppNavigation.php'; ?>
-        <main class="flex-grow container mx-auto px-4 py-8">
+        <main class="grow container mx-auto px-4 py-8">

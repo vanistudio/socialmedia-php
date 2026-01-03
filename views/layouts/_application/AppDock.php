@@ -14,7 +14,7 @@
                 </a>
             </li>
             <li>
-                <button type="button" class="flex flex-col items-center justify-center w-14 h-12 rounded-xl bg-vanixjnk text-white hover:bg-vanixjnk/90 transition shadow-sm" aria-label="Create post" onclick="toast.info('Tính năng đang phát triển', { description: 'Sắp có form đăng bài.' })">
+                <button type="button" data-action="open-create-post-dialog" class="flex flex-col items-center justify-center w-14 h-12 rounded-xl bg-vanixjnk text-white hover:bg-vanixjnk/90 transition shadow-sm" aria-label="Create post">
                     <iconify-icon icon="solar:add-circle-linear" width="24"></iconify-icon>
                     <span class="text-[10px] font-semibold mt-0.5">Post</span>
                 </button>
