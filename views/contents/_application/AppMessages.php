@@ -239,11 +239,101 @@ if ($selectedConversationId > 0) {
 <script>
 let selectedConversationId = <?php echo $selectedConversationId; ?>;
 let messageMediaUrl = '';
+const PUSHER_KEY = window.PUSHER_KEY || '';
+const PUSHER_CLUSTER = window.PUSHER_CLUSTER || 'ap1';
+let pusher = null;
+let pusherChannel = null;
+
 function scrollToBottom() {
     const container = document.getElementById('messages-container');
     if (container) {
         container.scrollTop = container.scrollHeight;
     }
+}
+
+function initRealtime() {
+    if (!PUSHER_KEY || !selectedConversationId) return;
+    
+    try {
+        pusher = new Pusher(PUSHER_KEY, {
+            cluster: PUSHER_CLUSTER,
+            forceTLS: true,
+        });
+        
+        const channelName = 'conversation.' + selectedConversationId;
+        pusherChannel = pusher.subscribe(channelName);
+        
+        pusherChannel.bind('message:new', function(payload) {
+            if (!payload || !payload.message) return;
+            
+            const currentUserId = <?php echo $currentUserId; ?>;
+            const msgSenderId = parseInt(payload.message.sender_id);
+            
+            if (msgSenderId === currentUserId) {
+                return;
+            }
+            
+            appendRealtimeMessage(payload.message);
+        });
+    } catch (e) {
+        console.error('Pusher initialization error:', e);
+    }
+}
+
+function appendRealtimeMessage(msg) {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
+    
+    const currentUserId = <?php echo $currentUserId; ?>;
+    const isOwn = parseInt(msg.sender_id) === currentUserId;
+    const msgContent = (msg.content || '').trim();
+    const msgMedia = (msg.media_url || '').trim();
+    const msgTime = new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    const avatar = msg.avatar || 'https://placehold.co/200x200';
+    
+    if (!msgContent && !msgMedia) return;
+    
+    let html = '';
+    html += '<div class="flex items-start gap-3 ' + (isOwn ? 'flex-row-reverse' : '') + '">';
+    if (!isOwn) {
+        html += '<img src="' + escapeHtml(avatar) + '" alt="Avatar" class="h-8 w-8 rounded-full object-cover flex-shrink-0">';
+    }
+    html += '<div class="flex flex-col gap-1 max-w-[70%] ' + (isOwn ? 'items-end' : 'items-start') + '">';
+    if (msgContent) {
+        html += '<div class="px-4 py-2 rounded-2xl ' + (isOwn ? 'bg-vanixjnk text-white' : 'bg-accent text-foreground') + '">';
+        html += '<p class="text-sm">' + escapeHtml(msgContent).replace(/\n/g, '<br>') + '</p>';
+        html += '</div>';
+    }
+    if (msgMedia) {
+        html += '<div class="rounded-2xl overflow-hidden max-w-xs">';
+        if (/\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(msgMedia)) {
+            html += '<img src="' + escapeHtml(msgMedia) + '" alt="Media" class="max-w-full h-auto">';
+        } else if (/\.(mp4|webm|mov)(\?|$)/i.test(msgMedia)) {
+            html += '<video src="' + escapeHtml(msgMedia) + '" controls class="max-w-full h-auto"></video>';
+        } else {
+            html += '<a href="' + escapeHtml(msgMedia) + '" target="_blank" class="block px-4 py-2 bg-accent text-foreground hover:bg-accent/80 transition">';
+            html += '<iconify-icon icon="solar:file-linear" width="20"></iconify-icon>';
+            html += '<span class="ml-2">Xem file</span>';
+            html += '</a>';
+        }
+        html += '</div>';
+    }
+    html += '<p class="text-xs text-muted-foreground">' + escapeHtml(msgTime) + '</p>';
+    html += '</div>';
+    html += '</div>';
+    
+    container.insertAdjacentHTML('beforeend', html);
+    scrollToBottom();
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 function loadMessages() {
     if (!selectedConversationId) return;
@@ -348,7 +438,13 @@ $('#send-message-form').on('submit', function(e) {
         
         $form.find('textarea[name=content]').val('');
         clearMessageMedia();
-        loadMessages();
+        
+        if (data && data.message) {
+            appendRealtimeMessage(data.message);
+        } else {
+            loadMessages();
+        }
+        
         toast.success('Đã gửi tin nhắn');
     }, 'json').fail(function() {
         $btn.prop('disabled', false);
@@ -393,11 +489,13 @@ function clearMessageMedia() {
 }
 
 if (selectedConversationId) {
-    setInterval(function() {
-        loadMessages();
-    }, 3000);
+    initRealtime();
     
     setTimeout(scrollToBottom, 100);
+    
+    setInterval(function() {
+        loadMessages();
+    }, 20000);
 }
 
 $('textarea[name=content]').on('input', function() {

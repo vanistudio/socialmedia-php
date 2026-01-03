@@ -277,6 +277,47 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
     ");
 
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `blacklist_keywords` (
+            `id` INT NOT NULL AUTO_INCREMENT,
+            `keyword` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+            `active` TINYINT(1) NOT NULL DEFAULT 1,
+            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uniq_keyword` (`keyword`),
+            KEY `idx_active` (`active`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ");
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `content_moderation_logs` (
+            `id` BIGINT NOT NULL AUTO_INCREMENT,
+            `user_id` INT NOT NULL,
+            `content_type` VARCHAR(50) NOT NULL,
+            `content` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+            `related_id` BIGINT NULL DEFAULT NULL,
+            `violations` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+            `blacklist_keywords` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+            `scores` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+            `source` VARCHAR(50) NULL DEFAULT NULL,
+            `action` VARCHAR(50) NOT NULL DEFAULT 'blocked',
+            `reviewed_by` INT NULL DEFAULT NULL,
+            `review_status` VARCHAR(50) NULL DEFAULT NULL,
+            `reviewed_at` TIMESTAMP NULL DEFAULT NULL,
+            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_user` (`user_id`),
+            KEY `idx_content_type` (`content_type`),
+            KEY `idx_related_id` (`related_id`),
+            KEY `idx_action` (`action`),
+            KEY `idx_review_status` (`review_status`),
+            KEY `idx_created_at` (`created_at`),
+            CONSTRAINT `fk_mod_log_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_mod_reviewer` FOREIGN KEY (`reviewed_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ");
+
     $defaultSettings = [
         ['key' => 'siteTitle', 'value' => 'Vanix Social', 'type' => 'string'],
         ['key' => 'siteDescription', 'value' => 'Mạng xã hội hiện đại với giao diện shadcn/radix, Tailwind CSS và màu chủ đạo vanixjnk.', 'type' => 'string'],
@@ -298,7 +339,23 @@ try {
         ]);
     }
 
-    echo "✅ Install completed: database + tables + default settings seeded.\n";
+    $defaultBlacklistKeywords = [
+        'địt', 'đụ', 'đéo', 'đcm', 'đkm', 'vl', 'vcl', 'clgt', 'dm', 'đmm',
+        'lồn', 'buồi', 'cặc', 'dái', 'đít', 'lol', 'lz',
+        'chết tiệt', 'đồ khốn', 'đồ ngu', 'thằng ngu', 'con ngu',
+        'giết', 'chém', 'đánh chết', 'giết người',
+        'bom', 'bom nổ', 'khủng bố', 'đánh bom',
+        'ma túy', 'heroin', 'cần sa', 'cocain',
+    ];
+
+    $stmt = $pdo->prepare("INSERT INTO `blacklist_keywords` (`keyword`, `active`) VALUES (:keyword, 1)
+        ON DUPLICATE KEY UPDATE `active` = 1");
+    
+    foreach ($defaultBlacklistKeywords as $keyword) {
+        $stmt->execute([':keyword' => $keyword]);
+    }
+
+    echo "✅ Install completed: database + tables + default settings + blacklist keywords seeded.\n";
 
 } catch (PDOException $e) {
     die("❌ Error: " . $e->getMessage() . "\n");

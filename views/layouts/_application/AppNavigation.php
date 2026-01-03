@@ -9,6 +9,28 @@ if ($__isLoggedIn && isset($Vani) && $Vani) {
 
 $__displayName = $__currentUser['full_name'] ?? 'User';
 $__username = $__currentUser['username'] ?? '';
+
+$__currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$__currentPath = rtrim($__currentPath, '/') ?: '/';
+
+function isActivePath($path, $currentPath) {
+    if ($path === '/' && $currentPath === '/') {
+        return true;
+    }
+    if ($path !== '/' && strpos($currentPath, $path) === 0) {
+        return true;
+    }
+    return false;
+}
+
+$__isHomeActive = isActivePath('/', $__currentPath);
+$__isExploreActive = isActivePath('/explore', $__currentPath);
+$__isNotificationsActive = isActivePath('/notifications', $__currentPath);
+$__isMessagesActive = isActivePath('/messages', $__currentPath);
+$__isSettingsActive = isActivePath('/settings', $__currentPath);
+$__isProfileActive = $__username && isActivePath('/u/' . $__username, $__currentPath);
+$__isLoginActive = isActivePath('/login', $__currentPath);
+$__isRegisterActive = isActivePath('/register', $__currentPath);
 ?>
 
 <header class="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur">
@@ -87,17 +109,17 @@ $__username = $__currentUser['username'] ?? '';
     <nav class="hidden lg:block border-t border-border bg-background">
         <div class="container mx-auto px-4">
             <ul class="flex items-center gap-2 h-12">
-                <li><a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Trang chủ</a></li>
-                <li><a href="/explore" class="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Khám phá</a></li>
+                <li><a href="/" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isHomeActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Trang chủ</a></li>
+                <li><a href="/explore" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isExploreActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Khám phá</a></li>
 
                 <?php if ($__isLoggedIn): ?>
-                    <li><a href="/notifications" class="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Thông báo</a></li>
-                    <li><a href="/messages" class="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Tin nhắn</a></li>
-                    <li><a href="/settings" class="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Cài đặt</a></li>
-                    <li><a href="<?php echo $__username ? '/u/' . htmlspecialchars($__username) : '/settings'; ?>" class="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Trang cá nhân</a></li>
+                    <li><a href="/notifications" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isNotificationsActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Thông báo</a></li>
+                    <li><a href="/messages" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isMessagesActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Tin nhắn</a></li>
+                    <li><a href="/settings" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isSettingsActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Cài đặt</a></li>
+                    <li><a href="<?php echo $__username ? '/u/' . htmlspecialchars($__username) : '/settings'; ?>" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isProfileActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Trang cá nhân</a></li>
                 <?php else: ?>
-                    <li><a href="/login" class="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Đăng nhập</a></li>
-                    <li><a href="/register" class="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk transition">Đăng ký</a></li>
+                    <li><a href="/login" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isLoginActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Đăng nhập</a></li>
+                    <li><a href="/register" class="px-3 py-2 rounded-md text-sm font-medium <?php echo $__isRegisterActive ? 'text-vanixjnk bg-vanixjnk/10' : 'text-muted-foreground hover:bg-vanixjnk/10 hover:text-vanixjnk'; ?> transition">Đăng ký</a></li>
                 <?php endif; ?>
             </ul>
         </div>

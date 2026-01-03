@@ -484,7 +484,7 @@ window.vanixjnkdev = {
             const content = selectContainer.querySelector('.custom-select-content');
             const input = selectContainer.querySelector('input[type="hidden"]');
             const options = selectContainer.querySelectorAll('.custom-select-item');
-            const chevron = trigger.querySelector('.fa-chevron-down');
+            const chevron = trigger.querySelector('.fa-chevron-down') || trigger.querySelector('.chevron-icon');
             const selectedText = trigger.querySelector('.selected-text');
             let initialSelected = null;
             if (input && input.value) {
@@ -539,7 +539,7 @@ window.vanixjnkdev = {
 
         function openSelect(container) {
             const content = container.querySelector('.custom-select-content');
-            const chevron = container.querySelector('.fa-chevron-down');
+            const chevron = container.querySelector('.fa-chevron-down') || container.querySelector('.chevron-icon');
 
             content.classList.remove('hidden');
             requestAnimationFrame(() => {
@@ -549,7 +549,7 @@ window.vanixjnkdev = {
         }
         function closeSelect(container) {
             const content = container.querySelector('.custom-select-content');
-            const chevron = container.querySelector('.fa-chevron-down');
+            const chevron = container.querySelector('.fa-chevron-down') || container.querySelector('.chevron-icon');
             content.dataset.state = 'closed';
             if (chevron) chevron.style.transform = 'rotate(0deg)';
             setTimeout(() => {

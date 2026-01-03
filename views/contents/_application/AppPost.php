@@ -200,9 +200,190 @@ $media = $Vani->get_list("SELECT * FROM `post_media` WHERE `post_id` = '$postId'
     </div>
 </div>
 
+<div id="report-dialog" class="dialog hidden fixed inset-0 z-50 flex items-center justify-center p-4" data-dialog data-state="closed">
+    <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" data-dialog-backdrop></div>
+    <div class="relative w-full max-w-md mx-auto" data-dialog-content>
+        <div class="bg-card border border-border rounded-2xl shadow-lg" data-dialog-inner>
+            <div class="p-4 border-b border-border flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-foreground">Báo cáo</h3>
+                <button type="button" data-dialog-close onclick="closeReportDialog()" class="h-8 w-8 rounded-lg hover:bg-accent transition flex items-center justify-center">
+                    <iconify-icon icon="solar:close-circle-linear" width="20"></iconify-icon>
+                </button>
+            </div>
+            <form id="report-form" class="p-4 space-y-4">
+                <input type="hidden" id="report-target-type" value="">
+                <input type="hidden" id="report-target-id" value="">
+                
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-foreground">Lý do báo cáo</label>
+                    <div class="custom-select-container relative">
+                        <input type="hidden" id="report-reason" name="report-reason" value="Spam">
+                        <button type="button" class="custom-select-trigger w-full flex items-center justify-between bg-background border border-input hover:border-vanixjnk rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-vanixjnk/20 transition-all cursor-pointer">
+                            <span class="selected-text truncate mr-2">Spam</span>
+                            <iconify-icon icon="solar:alt-arrow-down-linear" class="chevron-icon text-xs text-muted-foreground transition-transform duration-200" width="14"></iconify-icon>
+                        </button>
+                        <div class="custom-select-content absolute w-full mt-1 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden bg-background hidden" data-state="closed">
+                            <div class="max-h-[200px] overflow-y-auto scrollbar-thin p-1">
+                                <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Spam" data-label="Spam" data-state="checked">
+                                    <span class="truncate">Spam</span>
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                        <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
+                                    </span>
+                                </div>
+                                <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Nội dung không phù hợp" data-label="Nội dung không phù hợp" data-state="unchecked">
+                                    <span class="truncate">Nội dung không phù hợp</span>
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                        <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
+                                    </span>
+                                </div>
+                                <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Quấy rối" data-label="Quấy rối" data-state="unchecked">
+                                    <span class="truncate">Quấy rối</span>
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                        <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
+                                    </span>
+                                </div>
+                                <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Lừa đảo" data-label="Lừa đảo" data-state="unchecked">
+                                    <span class="truncate">Lừa đảo</span>
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                        <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
+                                    </span>
+                                </div>
+                                <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Bạo lực" data-label="Bạo lực" data-state="unchecked">
+                                    <span class="truncate">Bạo lực</span>
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                        <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
+                                    </span>
+                                </div>
+                                <div class="custom-select-item relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none hover:bg-vanixjnk/10 hover:text-vanixjnk data-[state=checked]:font-bold data-[state=checked]:text-vanixjnk transition-colors" data-value="Other" data-label="Khác" data-state="unchecked">
+                                    <span class="truncate">Khác</span>
+                                    <span class="absolute right-3 flex h-3.5 w-3.5 items-center justify-center opacity-0 data-[state=checked]:opacity-100 check-icon">
+                                        <iconify-icon icon="solar:check-circle-bold" class="text-xs" width="14"></iconify-icon>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 hidden">
+                    <label for="report-custom-reason" class="text-sm font-medium text-foreground">Mô tả chi tiết</label>
+                    <textarea id="report-custom-reason" rows="3" placeholder="Vui lòng mô tả chi tiết lý do báo cáo..." class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vanixjnk/30 focus-visible:border-vanixjnk/50"></textarea>
+                </div>
+                
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeReportDialog()" class="h-10 px-4 rounded-lg border border-input bg-card hover:bg-accent transition text-sm font-medium">Hủy</button>
+                    <button type="submit" id="btn-submit-report" class="h-10 px-4 rounded-lg bg-red-500 text-white hover:bg-red-500/90 transition text-sm font-medium">Gửi báo cáo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+let reportDialog = null;
+
+function openReportDialog(targetType, targetId) {
+    $('#report-target-type').val(targetType);
+    $('#report-target-id').val(targetId);
+    $('#report-reason').val('Spam');
+    $('#report-custom-reason').val('').closest('.mt-3').addClass('hidden');
+    
+    const $selectContainer = $('#report-reason').closest('.custom-select-container');
+    const $selectedText = $selectContainer.find('.selected-text');
+    const $items = $selectContainer.find('.custom-select-item');
+    $items.attr('data-state', 'unchecked');
+    $items.filter('[data-value="Spam"]').attr('data-state', 'checked');
+    $selectedText.text('Spam');
+    
+    if (reportDialog) {
+        reportDialog.open();
+    } else {
+        const $dialog = $('#report-dialog');
+        $dialog.removeClass('hidden').addClass('flex');
+        setTimeout(() => {
+            $dialog.attr('data-state', 'open');
+        }, 10);
+    }
+}
+
+function closeReportDialog() {
+    if (reportDialog) {
+        reportDialog.close();
+    } else {
+        const $dialog = $('#report-dialog');
+        $dialog.attr('data-state', 'closed');
+        setTimeout(() => {
+            $dialog.addClass('hidden').removeClass('flex');
+        }, 200);
+    }
+}
+
+window.openReportDialog = openReportDialog;
+window.closeReportDialog = closeReportDialog;
+
 $(document).ready(function() {
     const currentUserId = <?php echo $currentUserId; ?>;
+    
+    setTimeout(function() {
+        if (window.initDialog) {
+            reportDialog = window.initDialog('report-dialog');
+        }
+    }, 100);
+    
+    $('#report-reason').on('change', function() {
+        const value = $(this).val();
+        if (value === 'Other') {
+            $('#report-custom-reason').closest('.mt-3').removeClass('hidden');
+        } else {
+            $('#report-custom-reason').closest('.mt-3').addClass('hidden');
+        }
+    });
+    
+    setTimeout(function() {
+        if (window.initCustomSelects) {
+            window.initCustomSelects();
+        }
+    }, 200);
+    
+    $('#report-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const targetType = $('#report-target-type').val();
+        const targetId = $('#report-target-id').val();
+        const reason = $('#report-reason').val();
+        const customReason = $('#report-custom-reason').val().trim();
+        
+        if (reason === 'Other' && !customReason) {
+            toast.error('Vui lòng nhập lý do báo cáo');
+            return;
+        }
+        
+        const finalReason = reason === 'Other' ? customReason : reason;
+        
+        const $btn = $('#btn-submit-report');
+        const original = $btn.html();
+        $btn.prop('disabled', true).html('<span>Đang gửi...</span>');
+        
+        $.post('/api/controller/app', {
+            type: 'REPORT_ENTITY',
+            target_type: targetType,
+            target_id: targetId,
+            reason: finalReason,
+            csrf_token: window.CSRF_TOKEN || ''
+        }, function(data) {
+            $btn.prop('disabled', false).html(original);
+            
+            if (data.status === 'success') {
+                toast.success(data.message);
+                closeReportDialog();
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(function() {
+            $btn.prop('disabled', false).html(original);
+            toast.error('Không thể kết nối tới máy chủ');
+        });
+    });
 
     $(document).on('click', '[data-action]', function() {
         const action = $(this).data('action');
@@ -250,10 +431,11 @@ $(document).ready(function() {
                 break;
 
             case 'report-post':
-                toast.info('Đang gửi báo cáo...');
-                $.post('/api/controller/app', { type: 'REPORT_ENTITY', target_type: 'post', target_id: postId, reason: 'Spam', csrf_token: window.CSRF_TOKEN || '' }, function(data) {
-                    if (data.status === 'success') toast.success(data.message);
-                }, 'json');
+                if (!currentUserId) {
+                    toast.error('Vui lòng đăng nhập để thực hiện');
+                    return;
+                }
+                openReportDialog('post', postId);
                 break;
 
             case 'reply-comment':

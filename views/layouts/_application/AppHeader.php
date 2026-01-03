@@ -18,12 +18,15 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
         window.SONNER_CONFIG = <?php echo json_encode(require $_SERVER['DOCUMENT_ROOT'] . '/config/sonner.php'); ?>;
     </script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Signika:wght@300..700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
         window.CSRF_TOKEN = '<?php echo get_csrf_token(); ?>';
+        window.PUSHER_KEY = '<?php echo htmlspecialchars($_ENV['PUSHER_APP_KEY'] ?? ''); ?>';
+        window.PUSHER_CLUSTER = '<?php echo htmlspecialchars($_ENV['PUSHER_APP_CLUSTER'] ?? 'ap1'); ?>';
     </script>
 </head>
 

@@ -8,7 +8,7 @@
                 </a>
             </li>
             <li>
-                <a href="/explore" class="group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition" onclick="toast.info('Đang phát triển'); return false;">
+                <a href="/explore" class="group flex flex-col items-center justify-center w-14 h-12 rounded-xl text-muted-foreground hover:text-vanixjnk hover:bg-vanixjnk/10 transition">
                     <iconify-icon icon="solar:compass-linear" width="22"></iconify-icon>
                     <span class="text-[10px] font-medium mt-0.5">Explore</span>
                 </a>
