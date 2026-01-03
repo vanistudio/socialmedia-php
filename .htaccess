@@ -35,3 +35,9 @@ RewriteRule ^settings$ views/contents/_application/AppSetting.php [L]
 
 # Messages page: /messages
 RewriteRule ^messages$ views/contents/_application/AppMessages.php [L]
+
+# Notifications page: /notifications
+RewriteRule ^notifications$ views/contents/_application/AppNotifications.php [L]
+
+# Explore page: /explore
+RewriteRule ^explore$ views/contents/_application/AppExplore.php [L]

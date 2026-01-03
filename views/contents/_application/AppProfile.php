@@ -25,6 +25,13 @@ if ($isLoggedIn) {
 
 $isOwnProfile = ($isLoggedIn && $currentUserId === $profileUserId);
 
+$isFollowing = false;
+$isBlocked = false;
+if ($isLoggedIn && !$isOwnProfile) {
+    $isFollowing = $Vani->num_rows("SELECT id FROM `follows` WHERE `follower_id` = '$currentUserId' AND `following_id` = '$profileUserId'") > 0;
+    $isBlocked = $Vani->num_rows("SELECT id FROM `user_blocks` WHERE `blocker_id` = '$currentUserId' AND `blocked_id` = '$profileUserId'") > 0;
+}
+
 $stats = [
     'posts' => $Vani->num_rows("SELECT id FROM `posts` WHERE `user_id` = '$profileUserId'") ?: 0,
     'followers' => $Vani->num_rows("SELECT id FROM `follows` WHERE `following_id` = '$profileUserId'") ?: 0,
@@ -85,9 +92,38 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
                             <iconify-icon icon="solar:settings-linear" width="18"></iconify-icon><span>Chỉnh sửa</span>
                         </a>
                     <?php else: ?>
-                        <button class="h-10 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium flex items-center gap-2">
-                            <iconify-icon icon="solar:user-plus-rounded-linear" width="18"></iconify-icon><span>Theo dõi</span>
-                        </button>
+                        <?php if ($isLoggedIn): ?>
+                            <button type="button" id="follow-btn" data-action="toggle-follow" data-user-id="<?php echo $profileUserId; ?>" class="h-10 px-4 rounded-lg <?php echo $isFollowing ? 'border border-input bg-card hover:bg-accent' : 'bg-vanixjnk text-white hover:bg-vanixjnk/90'; ?> transition text-sm font-medium flex items-center gap-2">
+                                <iconify-icon icon="<?php echo $isFollowing ? 'solar:user-check-rounded-linear' : 'solar:user-plus-rounded-linear'; ?>" width="18"></iconify-icon>
+                                <span id="follow-text"><?php echo $isFollowing ? 'Đang theo dõi' : 'Theo dõi'; ?></span>
+                            </button>
+                            <div class="relative dropdown-container">
+                                <button type="button" onclick="toggleDropdown('profile-menu', this)" class="h-10 w-10 rounded-lg border border-input bg-card hover:bg-accent transition flex items-center justify-center text-muted-foreground" aria-label="More options">
+                                    <iconify-icon icon="solar:menu-dots-bold" width="18"></iconify-icon>
+                                </button>
+                                <div id="profile-menu" class="dropdown-menu hidden fixed w-56 bg-card border border-border rounded-xl shadow-lg z-50" data-state="closed">
+                                    <ul class="py-1">
+                                        <li>
+                                            <button type="button" data-action="toggle-block" data-user-id="<?php echo $profileUserId; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
+                                                <iconify-icon icon="<?php echo $isBlocked ? 'solar:unlock-linear' : 'solar:lock-linear'; ?>" width="16"></iconify-icon>
+                                                <span><?php echo $isBlocked ? 'Bỏ chặn' : 'Chặn người dùng'; ?></span>
+                                            </button>
+                                        </li>
+                                        <hr class="my-1 border-border">
+                                        <li>
+                                            <button type="button" data-action="report-user" data-user-id="<?php echo $profileUserId; ?>" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
+                                                <iconify-icon icon="solar:danger-triangle-linear" width="16"></iconify-icon>
+                                                <span>Báo cáo</span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <a href="/login" class="h-10 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium flex items-center gap-2">
+                                <iconify-icon icon="solar:user-plus-rounded-linear" width="18"></iconify-icon><span>Theo dõi</span>
+                            </a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -96,8 +132,12 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
             <p class="text-sm text-muted-foreground max-w-2xl text-center sm:text-left"><?php echo htmlspecialchars($profileUser['bio']); ?></p>
             <div class="flex items-center justify-center sm:justify-start gap-6 text-sm">
                 <div class="text-center sm:text-left"><span class="font-bold text-foreground"><?php echo $stats['posts']; ?></span><span class="text-muted-foreground"> bài viết</span></div>
-                <div class="text-center sm:text-left"><span class="font-bold text-foreground"><?php echo $stats['followers']; ?></span><span class="text-muted-foreground"> người theo dõi</span></div>
-                <div class="text-center sm:text-left"><span class="font-bold text-foreground"><?php echo $stats['following']; ?></span><span class="text-muted-foreground"> đang theo dõi</span></div>
+                <button type="button" class="text-center sm:text-left hover:underline" data-action="view-followers" data-user-id="<?php echo $profileUserId; ?>">
+                    <span class="font-bold text-foreground" id="followers-count"><?php echo $stats['followers']; ?></span><span class="text-muted-foreground"> người theo dõi</span>
+                </button>
+                <button type="button" class="text-center sm:text-left hover:underline" data-action="view-following" data-user-id="<?php echo $profileUserId; ?>">
+                    <span class="font-bold text-foreground" id="following-count"><?php echo $stats['following']; ?></span><span class="text-muted-foreground"> đang theo dõi</span>
+                </button>
             </div>
         </div>
     </div>
@@ -134,9 +174,173 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Followers/Following Modal -->
+<div id="follow-modal" class="dialog hidden fixed inset-0 z-50 flex items-center justify-center p-4" data-state="closed">
+    <div class="dialog-overlay fixed inset-0 bg-background/80 backdrop-blur-sm" onclick="closeFollowModal()"></div>
+    <div class="dialog-content relative bg-card border border-border rounded-2xl shadow-lg w-full max-w-md max-h-[80vh] overflow-hidden">
+        <div class="p-4 border-b border-border flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-foreground" id="follow-modal-title">Người theo dõi</h2>
+            <button type="button" onclick="closeFollowModal()" class="h-8 w-8 rounded-lg hover:bg-accent transition flex items-center justify-center">
+                <iconify-icon icon="solar:close-circle-linear" width="20"></iconify-icon>
+            </button>
+        </div>
+        <div id="follow-modal-content" class="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
+            <div class="text-center py-8">
+                <p class="text-muted-foreground">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openFollowModal(type, userId) {
+    const modal = document.getElementById('follow-modal');
+    const title = document.getElementById('follow-modal-title');
+    const content = document.getElementById('follow-modal-content');
+    
+    title.textContent = type === 'followers' ? 'Người theo dõi' : 'Đang theo dõi';
+    content.html('<div class="text-center py-8"><p class="text-muted-foreground">Đang tải...</p></div>');
+    
+    modal.classList.remove('hidden');
+    modal.setAttribute('data-state', 'open');
+    
+    $.post('/api/controller/app', { type: type === 'followers' ? 'GET_FOLLOWERS' : 'GET_FOLLOWING', user_id: userId }, function(data) {
+        if (data.status === 'success') {
+            const users = data.users || [];
+            if (users.length === 0) {
+                content.html('<div class="text-center py-8"><p class="text-muted-foreground">Chưa có ai</p></div>');
+                return;
+            }
+            
+            let html = '<div class="space-y-2">';
+            users.forEach(function(user) {
+                html += `
+                    <a href="/u/${user.username}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition">
+                        <img src="${user.avatar || 'https://placehold.co/200x200/png'}" alt="Avatar" class="h-12 w-12 rounded-full object-cover">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-foreground truncate">${user.full_name}</p>
+                            <p class="text-xs text-muted-foreground">@${user.username}</p>
+                        </div>
+                    </a>
+                `;
+            });
+            html += '</div>';
+            content.html(html);
+        } else {
+            content.html('<div class="text-center py-8"><p class="text-red-500">Có lỗi xảy ra</p></div>');
+        }
+    }, 'json').fail(function() {
+        content.html('<div class="text-center py-8"><p class="text-red-500">Không thể kết nối tới máy chủ</p></div>');
+    });
+}
+
+function closeFollowModal() {
+    const modal = document.getElementById('follow-modal');
+    modal.setAttribute('data-state', 'closed');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 200);
+}
+
+$(document).ready(function() {
+    $(document).on('click', '[data-action="view-followers"], [data-action="view-following"]', function() {
+        const action = $(this).data('action');
+        const userId = $(this).data('user-id');
+        const type = action === 'view-followers' ? 'followers' : 'following';
+        openFollowModal(type, userId);
+    });
+});
+</script>
+
 <script>
 $(document).ready(function() {
     const currentUserId = <?php echo $currentUserId; ?>;
+    const isFollowing = <?php echo $isFollowing ? 'true' : 'false'; ?>;
+    
+    // Block/Unblock handler
+    $(document).on('click', '[data-action="toggle-block"]', function() {
+        if (!currentUserId) {
+            toast.error('Vui lòng đăng nhập để thực hiện');
+            return;
+        }
+        
+        const userId = $(this).data('user-id');
+        const $btn = $(this);
+        const $text = $btn.find('span');
+        const $icon = $btn.find('iconify-icon');
+        
+        if (!confirm('Bạn có chắc chắn muốn ' + ($text.text().includes('Bỏ chặn') ? 'bỏ chặn' : 'chặn') + ' người dùng này?')) {
+            return;
+        }
+        
+        $.post('/api/controller/app', { type: 'TOGGLE_BLOCK', user_id: userId }, function(data) {
+            if (data.status === 'success') {
+                if (data.is_blocked) {
+                    $text.text('Bỏ chặn');
+                    $icon.attr('icon', 'solar:unlock-linear');
+                } else {
+                    $text.text('Chặn người dùng');
+                    $icon.attr('icon', 'solar:lock-linear');
+                }
+                toast.success(data.message);
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(() => toast.error('Không thể kết nối tới máy chủ'));
+    });
+    
+    // Report user handler
+    $(document).on('click', '[data-action="report-user"]', function() {
+        if (!currentUserId) {
+            toast.error('Vui lòng đăng nhập để thực hiện');
+            return;
+        }
+        
+        const userId = $(this).data('user-id');
+        toast.info('Đang gửi báo cáo...');
+        $.post('/api/controller/app', { type: 'REPORT_ENTITY', target_type: 'user', target_id: userId, reason: 'Spam' }, function(data) {
+            if (data.status === 'success') {
+                toast.success(data.message);
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(() => toast.error('Không thể kết nối tới máy chủ'));
+    });
+    
+    // Follow/Unfollow handler
+    $(document).on('click', '[data-action="toggle-follow"]', function() {
+        if (!currentUserId) {
+            toast.error('Vui lòng đăng nhập để thực hiện');
+            return;
+        }
+        
+        const $btn = $(this);
+        const userId = $btn.data('user-id');
+        const $text = $('#follow-text');
+        const $icon = $btn.find('iconify-icon');
+        const $followersCount = $('#followers-count');
+        
+        $.post('/api/controller/app', { type: 'TOGGLE_FOLLOW', user_id: userId }, function(data) {
+            if (data.status === 'success') {
+                if (data.is_following) {
+                    $btn.removeClass('bg-vanixjnk text-white hover:bg-vanixjnk/90').addClass('border border-input bg-card hover:bg-accent');
+                    $text.text('Đang theo dõi');
+                    $icon.attr('icon', 'solar:user-check-rounded-linear');
+                } else {
+                    $btn.removeClass('border border-input bg-card hover:bg-accent').addClass('bg-vanixjnk text-white hover:bg-vanixjnk/90');
+                    $text.text('Theo dõi');
+                    $icon.attr('icon', 'solar:user-plus-rounded-linear');
+                }
+                $followersCount.text(data.followers_count);
+                toast.success(data.message);
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(() => toast.error('Không thể kết nối tới máy chủ'));
+    });
+    
     $(document).on('click', '[data-action]', function() {
         const action = $(this).data('action');
         const postId = $(this).data('post-id');

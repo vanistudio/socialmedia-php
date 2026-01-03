@@ -152,11 +152,28 @@
             <?php endif; ?>
         }
 
+        // Load notification count
+        function loadNotificationCount() {
+            <?php if ($__isLoggedIn): ?>
+            $.post('/api/controller/app', { type: 'GET_NOTIFICATIONS', limit: 1 }, function(data) {
+                if (data.status === 'success' && data.unread_count > 0) {
+                    $('#notifications-badge').text(data.unread_count).removeClass('hidden');
+                } else {
+                    $('#notifications-badge').addClass('hidden');
+                }
+            }, 'json').fail(function() {
+                // Silent fail
+            });
+            <?php endif; ?>
+        }
+
         // Load unread count on page load
         $(document).ready(function() {
             loadUnreadMessagesCount();
+            loadNotificationCount();
             // Refresh every 10 seconds
             setInterval(loadUnreadMessagesCount, 10000);
+            setInterval(loadNotificationCount, 10000);
         });
     </script>
 </body>

@@ -40,6 +40,14 @@ $authRequiredTypes = [
     'MARK_READ',
     'GET_UNREAD_COUNT',
     'SEARCH_USERS',
+    'TOGGLE_FOLLOW',
+    'GET_NOTIFICATIONS',
+    'MARK_NOTIFICATION_READ',
+    'TOGGLE_BLOCK',
+    'SEARCH_POSTS',
+    'SEARCH_ALL',
+    'GET_FOLLOWERS',
+    'GET_FOLLOWING',
 ];
 
 if (in_array($type, $authRequiredTypes, true)) {
@@ -280,6 +288,19 @@ if ($type === 'TOGGLE_LIKE') {
             'post_id' => $post_id,
             'user_id' => $uid,
         ]);
+        
+        // Tạo notification cho chủ bài viết
+        $post = $Vani->get_row("SELECT user_id FROM `posts` WHERE `id` = '$post_id'");
+        if ($post && intval($post['user_id']) !== $uid) {
+            $Vani->insert("notifications", [
+                'user_id' => intval($post['user_id']),
+                'actor_id' => $uid,
+                'type' => 'like',
+                'entity_type' => 'post',
+                'entity_id' => $post_id
+            ]);
+        }
+        
         json_success('Đã thích', ['liked' => true]);
     }
 }
@@ -313,6 +334,35 @@ if ($type === 'ADD_COMMENT') {
 
     $commentId = $Vani->insert('post_comments', $commentData);
     if (!$commentId) json_error('Không thể bình luận');
+
+    // Tạo notification
+    $postOwnerId = intval($post['user_id']);
+    $commenterId = intval($currentUser['id']);
+    
+    if ($parent_id > 0) {
+        // Reply to comment - notify comment owner
+        $parentComment = $Vani->get_row("SELECT user_id FROM `post_comments` WHERE `id` = '$parent_id'");
+        if ($parentComment && intval($parentComment['user_id']) !== $commenterId) {
+            $Vani->insert("notifications", [
+                'user_id' => intval($parentComment['user_id']),
+                'actor_id' => $commenterId,
+                'type' => 'reply',
+                'entity_type' => 'comment',
+                'entity_id' => intval($commentId)
+            ]);
+        }
+    }
+    
+    // Notify post owner (if not the commenter and not already notified for reply)
+    if ($postOwnerId !== $commenterId && ($parent_id <= 0 || intval($parentComment['user_id']) !== $postOwnerId)) {
+        $Vani->insert("notifications", [
+            'user_id' => $postOwnerId,
+            'actor_id' => $commenterId,
+            'type' => 'comment',
+            'entity_type' => 'post',
+            'entity_id' => $post_id
+        ]);
+    }
 
     json_success('Bình luận thành công', ['comment_id' => intval($commentId)]);
 }
@@ -628,6 +678,206 @@ if ($type === 'SEARCH_USERS') {
     ");
     
     json_success('Tìm kiếm thành công', ['users' => $users]);
+}
+
+if ($type === 'TOGGLE_FOLLOW') {
+    $targetUserId = intval($_POST['user_id'] ?? 0);
+    if ($targetUserId <= 0) json_error('User ID không hợp lệ');
+    
+    $uid = intval($currentUser['id']);
+    if ($uid === $targetUserId) json_error('Không thể theo dõi chính mình');
+    
+    $existing = $Vani->get_row("SELECT id FROM `follows` WHERE `follower_id` = '$uid' AND `following_id` = '$targetUserId'");
+    
+    if ($existing) {
+        $Vani->remove("follows", "`follower_id` = '$uid' AND `following_id` = '$targetUserId'");
+        $isFollowing = false;
+    } else {
+        $Vani->insert("follows", [
+            'follower_id' => $uid,
+            'following_id' => $targetUserId
+        ]);
+        $isFollowing = true;
+        
+        // Tạo notification
+        $Vani->insert("notifications", [
+            'user_id' => $targetUserId,
+            'actor_id' => $uid,
+            'type' => 'follow',
+            'entity_type' => 'user',
+            'entity_id' => $uid
+        ]);
+    }
+    
+    $followersCount = $Vani->num_rows("SELECT id FROM `follows` WHERE `following_id` = '$targetUserId'") ?: 0;
+    
+    json_success($isFollowing ? 'Đã theo dõi' : 'Đã bỏ theo dõi', [
+        'is_following' => $isFollowing,
+        'followers_count' => intval($followersCount)
+    ]);
+}
+
+if ($type === 'GET_NOTIFICATIONS') {
+    $uid = intval($currentUser['id']);
+    $limit = intval($_POST['limit'] ?? 20);
+    $offset = intval($_POST['offset'] ?? 0);
+    
+    $notifications = $Vani->get_list("
+        SELECT n.*, 
+            u.username, u.full_name, u.avatar,
+            CASE 
+                WHEN n.type = 'follow' THEN CONCAT(u.full_name, ' đã theo dõi bạn')
+                WHEN n.type = 'like' THEN CONCAT(u.full_name, ' đã thích bài viết của bạn')
+                WHEN n.type = 'comment' THEN CONCAT(u.full_name, ' đã bình luận bài viết của bạn')
+                WHEN n.type = 'reply' THEN CONCAT(u.full_name, ' đã trả lời bình luận của bạn')
+                ELSE 'Có thông báo mới'
+            END as message
+        FROM `notifications` n
+        LEFT JOIN `users` u ON n.actor_id = u.id
+        WHERE n.user_id = '$uid'
+        ORDER BY n.created_at DESC
+        LIMIT $limit OFFSET $offset
+    ");
+    
+    $unreadCount = $Vani->num_rows("SELECT id FROM `notifications` WHERE `user_id` = '$uid' AND `is_read` = 0") ?: 0;
+    
+    json_success('Lấy thông báo thành công', [
+        'notifications' => $notifications,
+        'unread_count' => intval($unreadCount)
+    ]);
+}
+
+if ($type === 'MARK_NOTIFICATION_READ') {
+    $notificationId = intval($_POST['notification_id'] ?? 0);
+    $uid = intval($currentUser['id']);
+    
+    if ($notificationId > 0) {
+        $Vani->update("notifications", ['is_read' => 1], "`id` = '$notificationId' AND `user_id` = '$uid'");
+    } else {
+        $Vani->update("notifications", ['is_read' => 1], "`user_id` = '$uid'");
+    }
+    
+    json_success('Đã đánh dấu đã đọc');
+}
+
+if ($type === 'TOGGLE_BLOCK') {
+    $targetUserId = intval($_POST['user_id'] ?? 0);
+    if ($targetUserId <= 0) json_error('User ID không hợp lệ');
+    
+    $uid = intval($currentUser['id']);
+    if ($uid === $targetUserId) json_error('Không thể chặn chính mình');
+    
+    $existing = $Vani->get_row("SELECT id FROM `user_blocks` WHERE `blocker_id` = '$uid' AND `blocked_id` = '$targetUserId'");
+    
+    if ($existing) {
+        $Vani->remove("user_blocks", "`blocker_id` = '$uid' AND `blocked_id` = '$targetUserId'");
+        $isBlocked = false;
+    } else {
+        $Vani->insert("user_blocks", [
+            'blocker_id' => $uid,
+            'blocked_id' => $targetUserId
+        ]);
+        $isBlocked = true;
+        
+        // Xóa follow nếu có
+        $Vani->remove("follows", "`follower_id` = '$uid' AND `following_id` = '$targetUserId'");
+        $Vani->remove("follows", "`follower_id` = '$targetUserId' AND `following_id` = '$uid'");
+    }
+    
+    json_success($isBlocked ? 'Đã chặn người dùng' : 'Đã bỏ chặn người dùng', ['is_blocked' => $isBlocked]);
+}
+
+if ($type === 'SEARCH_POSTS') {
+    $query = check_string($_POST['query'] ?? '');
+    if (strlen($query) < 2) json_error('Query phải có ít nhất 2 ký tự');
+    
+    $uid = isset($currentUser) ? intval($currentUser['id']) : 0;
+    $queryEscaped = addslashes($query);
+    
+    $posts = $Vani->get_list("
+        SELECT p.*, 
+            u.full_name, u.username, u.avatar,
+            (SELECT COUNT(*) FROM `post_likes` WHERE `post_id` = p.id) as like_count,
+            (SELECT COUNT(*) FROM `post_comments` WHERE `post_id` = p.id) as comment_count,
+            " . ($uid > 0 ? "(SELECT COUNT(*) FROM `post_likes` WHERE `post_id` = p.id AND `user_id` = '$uid') as has_liked," : "0 as has_liked,") . "
+            " . ($uid > 0 ? "(SELECT COUNT(*) FROM `post_bookmarks` WHERE `post_id` = p.id AND `user_id` = '$uid') as has_saved" : "0 as has_saved") . "
+        FROM `posts` p
+        JOIN `users` u ON p.user_id = u.id
+        WHERE p.content LIKE '%$queryEscaped%'
+        ORDER BY p.created_at DESC
+        LIMIT 20
+    ");
+    
+    json_success('Tìm kiếm thành công', ['posts' => $posts]);
+}
+
+if ($type === 'SEARCH_ALL') {
+    $query = check_string($_POST['query'] ?? '');
+    if (strlen($query) < 2) json_error('Query phải có ít nhất 2 ký tự');
+    
+    $uid = isset($currentUser) ? intval($currentUser['id']) : 0;
+    $queryEscaped = addslashes($query);
+    
+    $users = $Vani->get_list("
+        SELECT id, username, full_name, avatar
+        FROM users
+        " . ($uid > 0 ? "WHERE id != '$uid'" : "") . "
+        AND (username LIKE '%$queryEscaped%' OR full_name LIKE '%$queryEscaped%')
+        ORDER BY 
+            CASE 
+                WHEN username LIKE '$queryEscaped%' THEN 1
+                WHEN full_name LIKE '$queryEscaped%' THEN 2
+                ELSE 3
+            END,
+            username ASC
+        LIMIT 10
+    ");
+    
+    $posts = $Vani->get_list("
+        SELECT p.*, 
+            u.full_name, u.username, u.avatar,
+            (SELECT COUNT(*) FROM `post_likes` WHERE `post_id` = p.id) as like_count,
+            (SELECT COUNT(*) FROM `post_comments` WHERE `post_id` = p.id) as comment_count
+        FROM `posts` p
+        JOIN `users` u ON p.user_id = u.id
+        WHERE p.content LIKE '%$queryEscaped%'
+        ORDER BY p.created_at DESC
+        LIMIT 10
+    ");
+    
+    json_success('Tìm kiếm thành công', ['users' => $users, 'posts' => $posts]);
+}
+
+if ($type === 'GET_FOLLOWERS') {
+    $targetUserId = intval($_POST['user_id'] ?? 0);
+    if ($targetUserId <= 0) json_error('User ID không hợp lệ');
+    
+    $users = $Vani->get_list("
+        SELECT u.id, u.username, u.full_name, u.avatar
+        FROM `follows` f
+        JOIN `users` u ON f.follower_id = u.id
+        WHERE f.following_id = '$targetUserId'
+        ORDER BY f.created_at DESC
+        LIMIT 100
+    ");
+    
+    json_success('Lấy danh sách người theo dõi thành công', ['users' => $users]);
+}
+
+if ($type === 'GET_FOLLOWING') {
+    $targetUserId = intval($_POST['user_id'] ?? 0);
+    if ($targetUserId <= 0) json_error('User ID không hợp lệ');
+    
+    $users = $Vani->get_list("
+        SELECT u.id, u.username, u.full_name, u.avatar
+        FROM `follows` f
+        JOIN `users` u ON f.following_id = u.id
+        WHERE f.follower_id = '$targetUserId'
+        ORDER BY f.created_at DESC
+        LIMIT 100
+    ");
+    
+    json_success('Lấy danh sách đang theo dõi thành công', ['users' => $users]);
 }
 
 json_error('type không hợp lệ');
