@@ -10,7 +10,6 @@ if ($isLoggedIn) {
     $currentUserId = intval($currentUser['id'] ?? 0);
 }
 
-// Build visibility and block filters
 $visibilityFilter = '';
 $blockFilter = '';
 if ($currentUserId > 0) {

@@ -275,7 +275,6 @@ if ($type === 'ADMIN_DELETE_USER') {
     json_success('Đã xóa user và tất cả dữ liệu liên quan');
 }
 
-// ============ ADMIN DELETE POST ============
 if ($type === 'ADMIN_DELETE_POST') {
     $postId = intval($_POST['post_id'] ?? 0);
     
@@ -284,7 +283,6 @@ if ($type === 'ADMIN_DELETE_POST') {
     $post = $Vani->get_row("SELECT * FROM posts WHERE id = '$postId'");
     if (!$post) json_error('Bài viết không tồn tại');
     
-    // Delete related data
     $Vani->remove('post_media', "`post_id` = '$postId'");
     $Vani->remove('post_likes', "`post_id` = '$postId'");
     $Vani->remove('post_bookmarks', "`post_id` = '$postId'");
@@ -294,7 +292,6 @@ if ($type === 'ADMIN_DELETE_POST') {
     json_success('Đã xóa bài viết thành công');
 }
 
-// ============ ADMIN SUSPEND USER ============
 if ($type === 'ADMIN_SUSPEND_USER') {
     $userId = intval($_POST['user_id'] ?? 0);
     $suspend = isset($_POST['suspend']) ? ($_POST['suspend'] === 'true' || $_POST['suspend'] === '1' || $_POST['suspend'] === true) : true;
@@ -308,12 +305,11 @@ if ($type === 'ADMIN_SUSPEND_USER') {
     $targetUser = $Vani->get_row("SELECT * FROM users WHERE id = '$userId'");
     if (!$targetUser) json_error('User không tồn tại');
     
-    // Set level to 'suspended' or back to 'user'
     $newLevel = $suspend ? 'suspended' : 'user';
     
     $Vani->update('users', [
         'level' => $newLevel,
-        'session' => null, // Force logout
+        'session' => null,
     ], "`id` = '$userId'");
     
     json_success($suspend ? 'Đã đình chỉ tài khoản' : 'Đã bỏ đình chỉ tài khoản', ['level' => $newLevel]);

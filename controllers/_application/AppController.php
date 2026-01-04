@@ -111,7 +111,6 @@ if ($type === 'UPDATE_PROFILE') {
     if (isset($_POST['birthday'])) {
         $birthday = check_string2($_POST['birthday']);
         if (!empty($birthday) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
-            // Check if user is at least 13 years old
             $birthDate = new DateTime($birthday);
             $today = new DateTime();
             $age = $today->diff($birthDate)->y;
@@ -592,7 +591,6 @@ if ($type === 'CREATE_CONVERSATION') {
     
     $uid = intval($currentUser['id']);
     
-    // Check if blocked
     $isBlocked = $Vani->get_row("SELECT id FROM `user_blocks` WHERE (`blocker_id` = '$uid' AND `blocked_id` = '$target_user_id') OR (`blocker_id` = '$target_user_id' AND `blocked_id` = '$uid')");
     if ($isBlocked) {
         json_error('Không thể nhắn tin với người dùng này');
@@ -681,7 +679,6 @@ if ($type === 'SEND_MESSAGE') {
     $member = $Vani->get_row("SELECT * FROM conversation_members WHERE conversation_id = '$conversation_id' AND user_id = '$uid'");
     if (!$member) json_error('Bạn không có quyền gửi tin nhắn trong cuộc trò chuyện này');
     
-    // Check if blocked by any member in conversation
     $blockedMember = $Vani->get_row("
         SELECT ub.id FROM user_blocks ub
         INNER JOIN conversation_members cm ON cm.user_id = ub.blocker_id OR cm.user_id = ub.blocked_id
