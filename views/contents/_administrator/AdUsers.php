@@ -31,7 +31,6 @@ $users = $Vani->get_list("
 $total = $Vani->num_rows("SELECT id FROM users WHERE $whereClause") ?: 0;
 $totalPages = ceil($total / $limit);
 
-// Check if viewing specific user
 $viewUserId = intval($_GET['id'] ?? 0);
 $viewUser = null;
 if ($viewUserId > 0) {
@@ -63,7 +62,6 @@ $levelOptions = [
     </div>
 
     <?php if ($viewUser): ?>
-    <!-- User Detail View -->
     <div class="bg-card border border-border rounded-2xl overflow-hidden">
         <div class="h-32 bg-gradient-to-r from-red-500/20 to-purple-500/20 relative">
             <?php if (!empty($viewUser['banner'])): ?>
@@ -145,10 +143,7 @@ $levelOptions = [
                     <?php endif; ?>
                 </div>
             </div>
-
-            <!-- Actions -->
             <div class="mt-6 pt-6 border-t border-border space-y-4">
-                <!-- Change Level -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <div class="custom-select-container relative flex-1 sm:max-w-xs" id="level-select-container">
                         <input type="hidden" id="change-level-<?php echo $viewUser['id']; ?>" name="level" value="<?php echo htmlspecialchars($viewUser['level']); ?>">
@@ -173,8 +168,6 @@ $levelOptions = [
                         Cập nhật Level
                     </button>
                 </div>
-
-                <!-- Other Actions -->
                 <div class="flex flex-wrap gap-2">
                     <button type="button" onclick="resetUserPassword(<?php echo $viewUser['id']; ?>)" class="h-10 px-4 rounded-lg border border-input bg-card hover:bg-accent transition text-sm font-medium flex items-center gap-2">
                         <iconify-icon icon="solar:key-linear" width="16"></iconify-icon>
@@ -189,7 +182,6 @@ $levelOptions = [
         </div>
     </div>
     <?php else: ?>
-    <!-- Search & Filter -->
     <div class="bg-card border border-border rounded-2xl p-4">
         <form method="GET" action="/admin/users" class="flex flex-col gap-3">
             <div class="flex flex-col sm:flex-row gap-3">
@@ -198,7 +190,6 @@ $levelOptions = [
                     <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Tìm kiếm username, email, tên..." class="w-full h-11 pl-10 pr-4 rounded-xl border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30">
                 </div>
                 <div class="flex gap-2">
-                    <!-- Custom Select for Level Filter -->
                     <div class="custom-select-container relative flex-1 sm:w-40" id="filter-level-container">
                         <input type="hidden" name="level" id="filter-level" value="<?php echo htmlspecialchars($level); ?>">
                         <button type="button" class="custom-select-trigger w-full flex items-center justify-between bg-background border border-input hover:border-red-500/50 rounded-xl px-4 h-11 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer">
@@ -232,16 +223,12 @@ $levelOptions = [
             </div>
         </form>
     </div>
-
-    <!-- Users List -->
     <?php if (empty($users)): ?>
     <div class="bg-card border border-border rounded-2xl p-12 text-center">
         <iconify-icon icon="solar:users-group-two-rounded-linear" width="48" class="text-muted-foreground mx-auto mb-4"></iconify-icon>
         <p class="text-muted-foreground">Không tìm thấy user nào</p>
     </div>
     <?php else: ?>
-    
-    <!-- Mobile Cards View -->
     <div class="lg:hidden space-y-3">
         <?php foreach ($users as $user): ?>
         <div class="bg-card border border-border rounded-2xl p-4">
@@ -278,8 +265,6 @@ $levelOptions = [
         </div>
         <?php endforeach; ?>
     </div>
-    
-    <!-- Desktop Table View -->
     <div class="hidden lg:block bg-card border border-border rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
@@ -418,9 +403,7 @@ function deleteUser(userId) {
 }
 
 $(document).ready(function() {
-    // Re-init custom selects for dynamically loaded content
     if (window.initCustomSelects) {
-        // Reset initialized state for admin custom selects
         document.querySelectorAll('.custom-select-container').forEach(el => {
             el.dataset.initialized = 'false';
         });

@@ -2,7 +2,6 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/function.php';
 
-// Check if user is logged in and is admin
 $isLoggedIn = isset($_SESSION['email']) && !empty($_SESSION['email']);
 $currentUser = null;
 $isAdmin = false;
@@ -17,7 +16,6 @@ if (!$isLoggedIn || !$isAdmin) {
     exit;
 }
 
-// Get site settings
 $siteTitle = $Vani->get_row("SELECT value FROM settings WHERE `key` = 'siteTitle'");
 $siteTitle = $siteTitle['value'] ?? 'Vani Social';
 ?>

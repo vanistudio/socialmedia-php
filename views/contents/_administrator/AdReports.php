@@ -71,7 +71,6 @@ $totalPages = ceil($total / $limit);
     <?php else: ?>
     <div class="space-y-4">
         <?php foreach ($reports as $report): 
-            // Get reported content
             $reportedContent = null;
             $reportedUser = null;
             

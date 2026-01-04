@@ -50,8 +50,6 @@ $(document).ready(function() {
                     const avatar = notif.avatar || 'https://placehold.co/200x200/png';
                     const isRead = notif.is_read == 1;
                     const bgClass = isRead ? 'bg-card' : 'bg-vanixjnk/5';
-                    
-                    // Determine the link based on notification type
                     let notifLink = '#';
                     const type = notif.type || '';
                     const relatedId = notif.related_id || notif.entity_id || '';
@@ -61,10 +59,8 @@ $(document).ready(function() {
                     if (type === 'follow') {
                         notifLink = '/u/' + (notif.username || '');
                     } else if (type === 'like' || type === 'comment') {
-                        // For likes and comments on posts
                         notifLink = '/post/' + relatedId;
                     } else if (type === 'reply') {
-                        // For replies, use post_id_for_comment (the post containing the comment)
                         if (postIdForComment) {
                             notifLink = '/post/' + postIdForComment;
                         } else {
@@ -77,8 +73,6 @@ $(document).ready(function() {
                     } else if (notif.username) {
                         notifLink = '/u/' + notif.username;
                     }
-
-                    // Notification icons based on type
                     const typeIcons = {
                         'like': 'solar:heart-linear',
                         'comment': 'solar:chat-round-linear',
@@ -109,11 +103,8 @@ $(document).ready(function() {
                 });
                 
                 $container.html(html);
-                
-                // Mark notification as read when clicking
                 $container.find('[data-notification-id]').on('click', function(e) {
                     const notifId = $(this).data('notification-id');
-                    // Mark as read in background (don't prevent navigation)
                     $.post('/api/controller/app', { 
                         type: 'MARK_NOTIFICATION_READ', 
                         notification_id: notifId, 

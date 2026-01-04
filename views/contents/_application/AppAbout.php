@@ -12,13 +12,11 @@ $siteTagline = $siteTagline['value'] ?? 'Connect with the world';
 $contactEmail = $Vani->get_row("SELECT value FROM settings WHERE `key` = 'contactEmail'");
 $contactEmail = $contactEmail['value'] ?? 'contact@vanixsocial.com';
 
-// Get stats
 $totalUsers = $Vani->num_rows("SELECT id FROM users") ?: 0;
 $totalPosts = $Vani->num_rows("SELECT id FROM posts") ?: 0;
 ?>
 
 <div class="w-full max-w-4xl mx-auto">
-    <!-- Hero Section -->
     <div class="bg-card border border-border rounded-2xl shadow-sm overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-vanixjnk/20 via-purple-500/20 to-blue-500/20 p-12 text-center">
             <div class="h-20 w-20 mx-auto mb-6 rounded-2xl bg-vanixjnk/15 flex items-center justify-center">
@@ -38,7 +36,6 @@ $totalPosts = $Vani->num_rows("SELECT id FROM posts") ?: 0;
         </div>
     </div>
 
-    <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-card border border-border rounded-2xl p-6 text-center">
             <div class="h-12 w-12 mx-auto mb-3 rounded-xl bg-blue-500/15 flex items-center justify-center">
@@ -70,7 +67,6 @@ $totalPosts = $Vani->num_rows("SELECT id FROM posts") ?: 0;
         </div>
     </div>
 
-    <!-- Features -->
     <div class="bg-card border border-border rounded-2xl shadow-sm p-8 mb-6">
         <h2 class="text-2xl font-bold text-foreground text-center mb-8">Tính năng nổi bật</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -98,7 +94,6 @@ $totalPosts = $Vani->num_rows("SELECT id FROM posts") ?: 0;
         </div>
     </div>
 
-    <!-- Contact -->
     <div class="bg-card border border-border rounded-2xl shadow-sm p-8 text-center">
         <h2 class="text-2xl font-bold text-foreground mb-4">Liên hệ với chúng tôi</h2>
         <p class="text-muted-foreground mb-6">Có câu hỏi hoặc góp ý? Chúng tôi luôn sẵn sàng lắng nghe.</p>
@@ -108,7 +103,6 @@ $totalPosts = $Vani->num_rows("SELECT id FROM posts") ?: 0;
         </a>
     </div>
 
-    <!-- Links -->
     <div class="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
         <a href="/terms" class="hover:text-vanixjnk transition">Điều khoản sử dụng</a>
         <span>·</span>

@@ -1,7 +1,6 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_administrator/AdHeader.php';
 
-// Get statistics
 $totalUsers = $Vani->num_rows("SELECT id FROM users") ?: 0;
 $totalPosts = $Vani->num_rows("SELECT id FROM posts") ?: 0;
 $totalComments = $Vani->num_rows("SELECT id FROM post_comments") ?: 0;
@@ -9,13 +8,10 @@ $totalMessages = $Vani->num_rows("SELECT id FROM messages") ?: 0;
 $totalReports = $Vani->num_rows("SELECT id FROM reports WHERE status = 'open'") ?: 0;
 $totalModerationLogs = $Vani->num_rows("SELECT id FROM content_moderation_logs WHERE review_status IS NULL") ?: 0;
 
-// Get recent users
 $recentUsers = $Vani->get_list("SELECT * FROM users ORDER BY created_at DESC LIMIT 5");
 
-// Get recent posts
 $recentPosts = $Vani->get_list("SELECT p.*, u.full_name, u.username, u.avatar FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC LIMIT 5");
 
-// Get today's stats
 $todayUsers = $Vani->num_rows("SELECT id FROM users WHERE DATE(created_at) = CURDATE()") ?: 0;
 $todayPosts = $Vani->num_rows("SELECT id FROM posts WHERE DATE(created_at) = CURDATE()") ?: 0;
 ?>
@@ -31,7 +27,6 @@ $todayPosts = $Vani->num_rows("SELECT id FROM posts WHERE DATE(created_at) = CUR
         </div>
     </div>
 
-    <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div class="bg-card border border-border rounded-2xl p-4">
             <div class="flex items-center gap-3">
@@ -106,7 +101,6 @@ $todayPosts = $Vani->num_rows("SELECT id FROM posts WHERE DATE(created_at) = CUR
         </div>
     </div>
 
-    <!-- Today Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-card border border-border rounded-2xl p-6">
             <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -150,10 +144,7 @@ $todayPosts = $Vani->num_rows("SELECT id FROM posts WHERE DATE(created_at) = CUR
             </div>
         </div>
     </div>
-
-    <!-- Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Users -->
         <div class="bg-card border border-border rounded-2xl">
             <div class="p-4 border-b border-border flex items-center justify-between">
                 <h3 class="font-semibold text-foreground">Users mới nhất</h3>
@@ -172,8 +163,6 @@ $todayPosts = $Vani->num_rows("SELECT id FROM posts WHERE DATE(created_at) = CUR
                 <?php endforeach; ?>
             </div>
         </div>
-
-        <!-- Recent Posts -->
         <div class="bg-card border border-border rounded-2xl">
             <div class="p-4 border-b border-border flex items-center justify-between">
                 <h3 class="font-semibold text-foreground">Posts mới nhất</h3>

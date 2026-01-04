@@ -8,7 +8,6 @@ $__isDockReportsActive = strpos($__currentPath, '/admin/reports') === 0;
 $__isDockUsersActive = strpos($__currentPath, '/admin/users') === 0;
 $__isDockSettingsActive = strpos($__currentPath, '/admin/settings') === 0 || strpos($__currentPath, '/admin/blacklist') === 0;
 
-// Get counts for badges (only if not already loaded)
 if (!isset($pendingModerationCount)) {
     $pendingModerationCount = $Vani->num_rows("SELECT id FROM content_moderation_logs WHERE review_status IS NULL") ?: 0;
 }

@@ -1,7 +1,6 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_administrator/AdHeader.php';
 
-// Get all settings
 $settings = [];
 $settingsRows = $Vani->get_list("SELECT * FROM settings ORDER BY `key` ASC");
 foreach ($settingsRows as $row) {
@@ -17,7 +16,6 @@ foreach ($settingsRows as $row) {
         </div>
     </div>
 
-    <!-- Tabs -->
     <div class="border-b border-border overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <nav class="-mb-px flex space-x-2 sm:space-x-6 min-w-max" aria-label="Tabs">
             <button type="button" data-tab="general" class="tab-button border-b-2 border-red-500 text-red-500 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 text-sm font-medium flex items-center gap-1.5 sm:gap-2">
@@ -39,7 +37,6 @@ foreach ($settingsRows as $row) {
         </nav>
     </div>
 
-    <!-- General Tab -->
     <div id="general-tab" class="tab-content">
         <div class="bg-card border border-border rounded-2xl p-6 shadow-sm">
             <h2 class="text-lg font-semibold text-foreground mb-4">General Settings</h2>
@@ -81,7 +78,6 @@ foreach ($settingsRows as $row) {
         </div>
     </div>
 
-    <!-- Appearance Tab -->
     <div id="appearance-tab" class="tab-content hidden">
         <div class="bg-card border border-border rounded-2xl p-6 shadow-sm">
             <h2 class="text-lg font-semibold text-foreground mb-4">Appearance Settings</h2>
@@ -123,7 +119,6 @@ foreach ($settingsRows as $row) {
         </div>
     </div>
 
-    <!-- Moderation Tab -->
     <div id="moderation-tab" class="tab-content hidden">
         <div class="bg-card border border-border rounded-2xl p-6 shadow-sm">
             <h2 class="text-lg font-semibold text-foreground mb-4">Moderation Settings</h2>
@@ -184,7 +179,6 @@ foreach ($settingsRows as $row) {
         </div>
     </div>
 
-    <!-- API Keys Tab -->
     <div id="api-tab" class="tab-content hidden">
         <div class="bg-card border border-border rounded-2xl p-6 shadow-sm">
             <h2 class="text-lg font-semibold text-foreground mb-4">API Keys</h2>
@@ -260,7 +254,6 @@ $(document).ready(function() {
         switchTab(tabName);
     });
 
-    // Color picker sync
     $('#primaryColorPicker').on('input', function() {
         $('#primaryColor').val($(this).val());
     });
@@ -274,7 +267,6 @@ $(document).ready(function() {
         $('#secondaryColorPicker').val($(this).val());
     });
 
-    // Form submissions
     $('#general-form, #appearance-form, #moderation-form').on('submit', function(e) {
         e.preventDefault();
         const $form = $(this);

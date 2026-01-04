@@ -99,7 +99,6 @@
             const createPostDialog = window.initDialog ? window.initDialog('create-post-dialog') : null;
             let dialogPostMediaFiles = [];
 
-            // Dialog visibility dropdown
             $('#dialog-visibility-trigger').on('click', function(e) {
                 e.stopPropagation();
                 $('#dialog-visibility-dropdown').toggleClass('hidden');
@@ -230,7 +229,6 @@
             });
         });
 
-        // Share post function
         window.sharePost = function(postId, authorName, content) {
             const url = `${window.location.origin}/post/${postId}`;
             const title = `Bài viết của ${authorName}`;

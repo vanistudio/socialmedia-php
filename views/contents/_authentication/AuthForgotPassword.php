@@ -6,8 +6,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_authentication/AuthHeader.p
 if (!empty($_SESSION['email'])) {
     die('<script>setTimeout(function(){ location.href = "/" },1000);</script>');
 }
-
-// Get contact email from settings
 $contactEmail = $Vani->get_row("SELECT value FROM settings WHERE `key` = 'contactEmail'");
 $contactEmail = $contactEmail['value'] ?? 'support@vanixsocial.com';
 ?>
@@ -105,14 +103,12 @@ function requestReset() {
     }, function(data) {
         $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnHtml);
         
-        // Always show success to prevent email enumeration
         $('#forgot-form').addClass('hidden');
         $('#success-message').removeClass('hidden');
         
     }, 'json').fail(function() {
         $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnHtml);
         
-        // Still show success message to prevent email enumeration
         $('#forgot-form').addClass('hidden');
         $('#success-message').removeClass('hidden');
     });

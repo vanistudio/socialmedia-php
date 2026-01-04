@@ -29,8 +29,6 @@ if ($isLoggedIn && $currentUserId > 0) {
 } else {
     $visibilityFilter = "AND p.visibility = 'public'";
 }
-
-// Get suggested users (users not followed by current user)
 $suggestedUsers = [];
 if ($isLoggedIn && $currentUserId > 0) {
     $suggestedUsers = $Vani->get_list("
@@ -285,11 +283,11 @@ $posts = $Vani->get_list("SELECT
             <h3 class="font-semibold text-foreground mb-2">Tham gia Vani Social</h3>
             <p class="text-sm text-muted-foreground mb-4">Đăng ký để kết nối với mọi người và chia sẻ khoảnh khắc.</p>
             <div class="space-y-2">
-                <a href="/register" class="block w-full h-10 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium flex items-center justify-center gap-2">
+                <a href="/register" class="w-full h-10 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium flex items-center justify-center gap-2">
                     <iconify-icon icon="solar:user-plus-rounded-linear" width="18"></iconify-icon>
                     <span>Đăng ký ngay</span>
                 </a>
-                <a href="/login" class="block w-full h-10 px-4 rounded-lg border border-input bg-card hover:bg-accent transition text-sm font-medium flex items-center justify-center gap-2">
+                <a href="/login" class="w-full h-10 px-4 rounded-lg border border-input bg-card hover:bg-accent transition text-sm font-medium flex items-center justify-center gap-2">
                     <iconify-icon icon="solar:login-3-linear" width="18"></iconify-icon>
                     <span>Đã có tài khoản? Đăng nhập</span>
                 </a>
@@ -324,17 +322,57 @@ $posts = $Vani->get_list("SELECT
             <form id="edit-post-form" class="p-4">
                 <input type="hidden" name="type" value="UPDATE_POST">
                 <input type="hidden" name="post_id" id="edit-post-id">
+                <input type="hidden" name="visibility" id="edit-post-visibility" value="public">
                 <div class="space-y-4">
                     <div>
                         <textarea name="content" id="edit-post-content" placeholder="Bạn đang nghĩ gì?" class="w-full bg-transparent text-foreground placeholder:text-muted-foreground outline-none resize-none text-lg min-h-[120px] border border-input rounded-lg p-3"></textarea>
                         <div id="edit-post-media-previews" class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2"></div>
                     </div>
                     <div class="flex justify-between items-center pt-4 border-t border-border">
-                        <div class="flex gap-1 text-muted-foreground">
+                        <div class="flex items-center gap-2 text-muted-foreground">
                             <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent hover:text-vanixjnk transition flex items-center justify-center" aria-label="Add media" onclick="$('#edit-post-media-upload').click()">
                                 <iconify-icon icon="solar:gallery-wide-linear" width="20"></iconify-icon>
                             </button>
                             <input type="file" id="edit-post-media-upload" accept="image/*,video/*" class="hidden" multiple>
+                            
+                            <div class="relative" id="edit-visibility-dropdown-container">
+                                <button type="button" id="edit-visibility-trigger" class="h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent transition flex items-center gap-2 text-sm">
+                                    <iconify-icon id="edit-visibility-icon" icon="solar:earth-linear" width="16"></iconify-icon>
+                                    <span id="edit-visibility-text">Công khai</span>
+                                    <iconify-icon icon="solar:alt-arrow-down-linear" width="14" class="text-muted-foreground"></iconify-icon>
+                                </button>
+                                <div id="edit-visibility-dropdown" class="hidden absolute bottom-full left-0 mb-2 w-48 bg-card border border-border rounded-xl shadow-lg z-50">
+                                    <ul class="py-1">
+                                        <li>
+                                            <button type="button" data-edit-visibility="public" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                <iconify-icon icon="solar:earth-linear" width="18"></iconify-icon>
+                                                <div>
+                                                    <span class="font-medium">Công khai</span>
+                                                    <p class="text-xs text-muted-foreground">Mọi người có thể xem</p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" data-edit-visibility="followers" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                <iconify-icon icon="solar:users-group-rounded-linear" width="18"></iconify-icon>
+                                                <div>
+                                                    <span class="font-medium">Người theo dõi</span>
+                                                    <p class="text-xs text-muted-foreground">Chỉ người theo dõi</p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button type="button" data-edit-visibility="private" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition">
+                                                <iconify-icon icon="solar:lock-linear" width="18"></iconify-icon>
+                                                <div>
+                                                    <span class="font-medium">Riêng tư</span>
+                                                    <p class="text-xs text-muted-foreground">Chỉ mình tôi</p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="h-9 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium">Cập nhật</button>
                     </div>
@@ -392,8 +430,6 @@ $(document).ready(function() {
     let editPostMediaFiles = [];
     let editPostMediaUrls = [];
     let editPostDialog = null;
-
-    // Visibility dropdown
     $('#visibility-trigger').on('click', function(e) {
         e.stopPropagation();
         $('#visibility-dropdown').toggleClass('hidden');
@@ -422,6 +458,36 @@ $(document).ready(function() {
     $(document).on('click', function(e) {
         if (!$(e.target).closest('#visibility-dropdown-container').length) {
             $('#visibility-dropdown').addClass('hidden');
+        }
+    });
+    $('#edit-visibility-trigger').on('click', function(e) {
+        e.stopPropagation();
+        $('#edit-visibility-dropdown').toggleClass('hidden');
+    });
+
+    $('[data-edit-visibility]').on('click', function() {
+        const visibility = $(this).data('edit-visibility');
+        $('#edit-post-visibility').val(visibility);
+        
+        const icons = {
+            'public': 'solar:earth-linear',
+            'followers': 'solar:users-group-rounded-linear',
+            'private': 'solar:lock-linear'
+        };
+        const texts = {
+            'public': 'Công khai',
+            'followers': 'Người theo dõi',
+            'private': 'Riêng tư'
+        };
+        
+        $('#edit-visibility-icon').attr('icon', icons[visibility]);
+        $('#edit-visibility-text').text(texts[visibility]);
+        $('#edit-visibility-dropdown').addClass('hidden');
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#edit-visibility-dropdown-container').length) {
+            $('#edit-visibility-dropdown').addClass('hidden');
         }
     });
     
@@ -538,6 +604,22 @@ $(document).ready(function() {
         editPostMediaUrls.splice(index, 1);
         renderEditPostMedia();
     };
+
+    function copyToClipboardFallback(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            toast.success('Đã copy link bài viết');
+        } catch (err) {
+            toast.error('Không thể copy link');
+        }
+        document.body.removeChild(textarea);
+    }
     
     $('#edit-post-form').on('submit', function(e) {
         e.preventDefault();
@@ -684,24 +766,44 @@ $(document).ready(function() {
 
         switch (action) {
             case 'edit-post':
-                const $postCard = $(`#post-${postId}`);
-                const postContent = $postCard.find('.px-4.pb-4 p').text().trim() || '';
-                const postMedia = [];
-                $postCard.find('.grid img').each(function() {
-                    postMedia.push($(this).attr('src'));
+                $.post('/api/controller/app', { 
+                    type: 'GET_POST', 
+                    post_id: postId, 
+                    csrf_token: window.CSRF_TOKEN || '' 
+                }, function(data) {
+                    if (data.status === 'success' && data.post) {
+                        const post = data.post;
+                        $('#edit-post-id').val(postId);
+                        $('#edit-post-content').val(post.content || '');
+                        editPostMediaUrls = post.media || [];
+                        editPostMediaFiles = [];
+                        renderEditPostMedia();
+                        const visibility = post.visibility || 'public';
+                        $('#edit-post-visibility').val(visibility);
+                        const icons = {
+                            'public': 'solar:earth-linear',
+                            'followers': 'solar:users-group-rounded-linear',
+                            'private': 'solar:lock-linear'
+                        };
+                        const texts = {
+                            'public': 'Công khai',
+                            'followers': 'Người theo dõi',
+                            'private': 'Riêng tư'
+                        };
+                        $('#edit-visibility-icon').attr('icon', icons[visibility]);
+                        $('#edit-visibility-text').text(texts[visibility]);
+                        
+                        if (editPostDialog) {
+                            editPostDialog.open();
+                        } else {
+                            $('#edit-post-dialog').removeClass('hidden').addClass('flex');
+                        }
+                    } else {
+                        toast.error(data.message || 'Không thể tải bài viết');
+                    }
+                }, 'json').fail(function() {
+                    toast.error('Không thể kết nối tới máy chủ');
                 });
-                
-                $('#edit-post-id').val(postId);
-                $('#edit-post-content').val(postContent);
-                editPostMediaUrls = postMedia;
-                editPostMediaFiles = [];
-                renderEditPostMedia();
-                
-                if (editPostDialog) {
-                    editPostDialog.open();
-                } else {
-                    $('#edit-post-dialog').removeClass('hidden').addClass('flex');
-                }
                 break;
 
             case 'delete-post':
@@ -743,10 +845,16 @@ $(document).ready(function() {
                 break;
 
             case 'copy-link':
-                const url = `${window.location.origin}/post/${postId}`;
-                navigator.clipboard.writeText(url).then(() => {
-                    toast.success('Đã copy link bài viết');
-                }).catch(() => toast.error('Không thể copy link'));
+                const postUrl = `${window.location.origin}/post/${postId}`;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(postUrl).then(() => {
+                        toast.success('Đã copy link bài viết');
+                    }).catch(() => {
+                        copyToClipboardFallback(postUrl);
+                    });
+                } else {
+                    copyToClipboardFallback(postUrl);
+                }
                 break;
 
             case 'save-post':
@@ -852,7 +960,7 @@ $(document).ready(function() {
 });
 </script>
 
-<div id="report-dialog" class="dialog hidden fixed inset-0 z-50 flex items-center justify-center p-4" data-dialog data-state="closed">
+<div id="report-dialog" class="dialog hidden fixed inset-0 z-50 items-center justify-center p-4" data-dialog data-state="closed">
     <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" data-dialog-backdrop></div>
     <div class="relative w-full max-w-md mx-auto" data-dialog-content>
         <div class="bg-card border border-border rounded-2xl shadow-lg" data-dialog-inner>

@@ -567,20 +567,15 @@ window.vanixjnkdev = {
             const chevron = container.querySelector('.fa-chevron-down') || container.querySelector('.chevron-icon');
 
             content.classList.remove('hidden');
-            
-            // Use fixed positioning to escape overflow:hidden containers
             const rect = trigger.getBoundingClientRect();
             content.style.position = 'fixed';
             content.style.top = (rect.bottom + 4) + 'px';
             content.style.left = rect.left + 'px';
             content.style.width = rect.width + 'px';
             content.style.maxHeight = '200px';
-            
-            // Check if dropdown would go off-screen bottom
             const dropdownHeight = content.scrollHeight;
             const viewportHeight = window.innerHeight;
             if (rect.bottom + dropdownHeight + 8 > viewportHeight) {
-                // Position above the trigger instead
                 content.style.top = (rect.top - dropdownHeight - 4) + 'px';
             }
             
@@ -597,7 +592,6 @@ window.vanixjnkdev = {
             setTimeout(() => {
                 if (content.dataset.state === 'closed') {
                     content.classList.add('hidden');
-                    // Reset positioning styles
                     content.style.position = '';
                     content.style.top = '';
                     content.style.left = '';
@@ -613,8 +607,6 @@ window.vanixjnkdev = {
         initCustomSelects();
     }
     window.initCustomSelects = initCustomSelects;
-
-    // Close all selects on scroll (since we use fixed positioning)
     let scrollTimer;
     window.addEventListener('scroll', function() {
         clearTimeout(scrollTimer);
@@ -638,8 +630,6 @@ window.vanixjnkdev = {
             });
         }, 50);
     }, true);
-
-    // Close all selects on resize
     window.addEventListener('resize', function() {
         document.querySelectorAll('.custom-select-content[data-state="open"]').forEach(content => {
             const container = content.closest('.custom-select-container');

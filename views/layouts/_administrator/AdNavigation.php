@@ -19,7 +19,6 @@ $__isReportsActive = isAdminActivePath('/admin/reports', $__currentPath);
 $__isUsersActive = isAdminActivePath('/admin/users', $__currentPath);
 $__isSettingsActive = isAdminActivePath('/admin/settings', $__currentPath);
 
-// Get pending counts for badges
 $pendingReportsCount = $Vani->num_rows("SELECT id FROM reports WHERE status = 'open'") ?: 0;
 $pendingModerationCount = $Vani->num_rows("SELECT id FROM content_moderation_logs WHERE review_status IS NULL") ?: 0;
 ?>
@@ -33,7 +32,6 @@ $pendingModerationCount = $Vani->num_rows("SELECT id FROM content_moderation_log
             <span class="hidden sm:inline">Admin Panel</span>
         </a>
 
-        <!-- Search Box -->
         <div class="hidden md:flex flex-1 max-w-lg mx-8">
             <div class="relative w-full">
                 <iconify-icon icon="solar:magnifer-linear" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" width="18"></iconify-icon>

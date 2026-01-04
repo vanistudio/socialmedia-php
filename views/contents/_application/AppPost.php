@@ -418,7 +418,6 @@ $(document).ready(function() {
 
         switch (action) {
             case 'edit-post':
-                // Load post data and open edit dialog
                 $.post('/api/controller/app', { type: 'GET_POST', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success' && data.post) {
                         const post = data.post;
@@ -560,7 +559,6 @@ $(document).ready(function() {
     });
 });
 
-// Edit post dialog functionality
 let editPostDialog = null;
 let editPostMediaUrls = [];
 
@@ -664,7 +662,6 @@ function closeEditPostDialog() {
 }
 </script>
 
-<!-- Edit Post Dialog -->
 <div id="edit-post-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog data-state="closed">
     <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
     <div class="relative w-full max-w-xl mx-auto" data-dialog-content>

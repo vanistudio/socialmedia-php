@@ -18,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_error('Yêu cầu không hợp lệ');
 }
 
-// Validate CSRF token
 if (!isset($_SESSION['csrf_token'])) {
     generate_csrf_token();
 }
@@ -28,7 +27,6 @@ if (!validate_csrf_token($csrfToken)) {
     json_error('CSRF token không hợp lệ. Vui lòng tải lại trang.');
 }
 
-// Check authentication
 if (!isset($_SESSION['email']) || empty($_SESSION['email'])) {
     json_error('Bạn cần đăng nhập');
 }
@@ -40,7 +38,6 @@ if (!$currentUser) {
     json_error('Tài khoản không tồn tại');
 }
 
-// Check admin permission
 function isAdmin($user) {
     $level = $user['level'] ?? '';
     return $level === 'admin' || $level === 'administrator';
@@ -52,7 +49,6 @@ if (!isAdmin($currentUser)) {
 
 $type = $_POST['type'] ?? '';
 
-// ============ REVIEW MODERATION ============
 if ($type === 'REVIEW_MODERATION') {
     $logId = intval($_POST['log_id'] ?? 0);
     $reviewStatus = $_POST['review_status'] ?? '';
@@ -69,7 +65,6 @@ if ($type === 'REVIEW_MODERATION') {
         'reviewed_at' => date('Y-m-d H:i:s'),
     ], "`id` = '$logId'");
     
-    // If approved (content is bad), delete the related content
     if ($reviewStatus === 'approved' && !empty($log['related_id'])) {
         $relatedId = intval($log['related_id']);
         $contentType = $log['content_type'];
@@ -89,13 +84,11 @@ if ($type === 'REVIEW_MODERATION') {
     json_success('Đã cập nhật trạng thái review');
 }
 
-// ============ GET BLACKLIST KEYWORDS ============
 if ($type === 'GET_BLACKLIST_KEYWORDS') {
     $keywords = $Vani->get_list("SELECT * FROM blacklist_keywords ORDER BY created_at DESC");
     json_success('Lấy danh sách từ khóa thành công', ['keywords' => $keywords]);
 }
 
-// ============ ADD BLACKLIST KEYWORD ============
 if ($type === 'ADD_BLACKLIST_KEYWORD') {
     $keyword = trim($_POST['keyword'] ?? '');
     
@@ -114,7 +107,6 @@ if ($type === 'ADD_BLACKLIST_KEYWORD') {
     json_success('Đã thêm từ khóa thành công');
 }
 
-// ============ UPDATE BLACKLIST KEYWORD ============
 if ($type === 'UPDATE_BLACKLIST_KEYWORD') {
     $id = intval($_POST['id'] ?? 0);
     $keyword = trim($_POST['keyword'] ?? '');
@@ -138,7 +130,6 @@ if ($type === 'UPDATE_BLACKLIST_KEYWORD') {
     json_success('Đã cập nhật từ khóa thành công');
 }
 
-// ============ DELETE BLACKLIST KEYWORD ============
 if ($type === 'DELETE_BLACKLIST_KEYWORD') {
     $id = intval($_POST['id'] ?? 0);
     if ($id <= 0) json_error('id không hợp lệ');
@@ -151,7 +142,6 @@ if ($type === 'DELETE_BLACKLIST_KEYWORD') {
     json_success('Đã xóa từ khóa thành công');
 }
 
-// ============ RESOLVE REPORT ============
 if ($type === 'RESOLVE_REPORT') {
     $reportId = intval($_POST['report_id'] ?? 0);
     $reportStatus = $_POST['report_status'] ?? '';
@@ -169,7 +159,6 @@ if ($type === 'RESOLVE_REPORT') {
     json_success('Đã cập nhật trạng thái báo cáo');
 }
 
-// ============ DELETE REPORTED CONTENT ============
 if ($type === 'DELETE_REPORTED_CONTENT') {
     $reportId = intval($_POST['report_id'] ?? 0);
     $targetType = $_POST['entity_type'] ?? $_POST['target_type'] ?? '';
@@ -178,7 +167,6 @@ if ($type === 'DELETE_REPORTED_CONTENT') {
     if ($reportId <= 0) json_error('report_id không hợp lệ');
     if ($targetId <= 0) json_error('target_id không hợp lệ');
     
-    // Delete the content based on type
     if ($targetType === 'post') {
         $Vani->remove('post_media', "`post_id` = '$targetId'");
         $Vani->remove('post_likes', "`post_id` = '$targetId'");
@@ -189,10 +177,8 @@ if ($type === 'DELETE_REPORTED_CONTENT') {
         $Vani->remove('comment_likes', "`comment_id` = '$targetId'");
         $Vani->remove('post_comments', "`id` = '$targetId'");
     } elseif ($targetType === 'user') {
-        // For user deletion, use ADMIN_DELETE_USER instead
     }
     
-    // Update report status to resolved
     $Vani->update('reports', [
         'status' => 'resolved',
     ], "`id` = '$reportId'");
@@ -200,7 +186,6 @@ if ($type === 'DELETE_REPORTED_CONTENT') {
     json_success('Đã xóa nội dung và giải quyết báo cáo');
 }
 
-// ============ CHANGE USER LEVEL ============
 if ($type === 'ADMIN_CHANGE_USER_LEVEL') {
     $userId = intval($_POST['user_id'] ?? 0);
     $level = $_POST['level'] ?? '';
@@ -208,7 +193,6 @@ if ($type === 'ADMIN_CHANGE_USER_LEVEL') {
     if ($userId <= 0) json_error('user_id không hợp lệ');
     if (!in_array($level, ['member', 'admin', 'administrator'])) json_error('level không hợp lệ');
     
-    // Prevent self-demotion for safety
     if ($userId == $currentUser['id'] && $level !== 'administrator') {
         json_error('Bạn không thể tự hạ cấp chính mình');
     }
@@ -223,7 +207,6 @@ if ($type === 'ADMIN_CHANGE_USER_LEVEL') {
     json_success('Đã cập nhật level thành công');
 }
 
-// ============ RESET USER PASSWORD ============
 if ($type === 'ADMIN_RESET_PASSWORD') {
     $userId = intval($_POST['user_id'] ?? 0);
     $newPassword = $_POST['new_password'] ?? '';
@@ -244,13 +227,11 @@ if ($type === 'ADMIN_RESET_PASSWORD') {
     json_success('Đã reset mật khẩu thành công');
 }
 
-// ============ DELETE USER ============
 if ($type === 'ADMIN_DELETE_USER') {
     $userId = intval($_POST['user_id'] ?? 0);
     
     if ($userId <= 0) json_error('user_id không hợp lệ');
     
-    // Prevent self-deletion
     if ($userId == $currentUser['id']) {
         json_error('Bạn không thể xóa chính mình');
     }
@@ -258,8 +239,6 @@ if ($type === 'ADMIN_DELETE_USER') {
     $targetUser = $Vani->get_row("SELECT * FROM users WHERE id = '$userId'");
     if (!$targetUser) json_error('User không tồn tại');
     
-    // Delete all user-related data
-    // Posts
     $posts = $Vani->get_list("SELECT id FROM posts WHERE user_id = '$userId'");
     foreach ($posts as $post) {
         $postId = $post['id'];
@@ -270,43 +249,32 @@ if ($type === 'ADMIN_DELETE_USER') {
     }
     $Vani->remove('posts', "`user_id` = '$userId'");
     
-    // Comments
     $Vani->remove('post_comments', "`user_id` = '$userId'");
     
-    // Likes
     $Vani->remove('post_likes', "`user_id` = '$userId'");
     $Vani->remove('comment_likes', "`user_id` = '$userId'");
     
-    // Bookmarks
     $Vani->remove('post_bookmarks', "`user_id` = '$userId'");
     
-    // Follows
     $Vani->remove('follows', "`follower_id` = '$userId' OR `following_id` = '$userId'");
     
-    // Blocks
     $Vani->remove('user_blocks', "`blocker_id` = '$userId' OR `blocked_id` = '$userId'");
     
-    // Notifications
     $Vani->remove('notifications', "`user_id` = '$userId' OR `actor_id` = '$userId'");
     
-    // Messages and conversations
     $Vani->remove('messages', "`sender_id` = '$userId'");
     $Vani->remove('message_reads', "`user_id` = '$userId'");
     $Vani->remove('conversation_members', "`user_id` = '$userId'");
     
-    // Reports
     $Vani->remove('reports', "`reporter_id` = '$userId'");
     
-    // Content moderation logs
     $Vani->remove('content_moderation_logs', "`user_id` = '$userId'");
     
-    // Finally delete the user
     $Vani->remove('users', "`id` = '$userId'");
     
     json_success('Đã xóa user và tất cả dữ liệu liên quan');
 }
 
-// ============ UPDATE SETTINGS ============
 if ($type === 'ADMIN_UPDATE_SETTINGS') {
     $settings = $_POST['settings'] ?? '';
     $settingsData = json_decode($settings, true);
@@ -318,7 +286,6 @@ if ($type === 'ADMIN_UPDATE_SETTINGS') {
     foreach ($settingsData as $key => $value) {
         $keyEsc = addslashes($key);
         
-        // Check if setting exists
         $exists = $Vani->get_row("SELECT * FROM settings WHERE `key` = '$keyEsc'");
         
         if ($exists) {
@@ -336,7 +303,6 @@ if ($type === 'ADMIN_UPDATE_SETTINGS') {
     json_success('Đã cập nhật cài đặt thành công');
 }
 
-// ============ GET DASHBOARD STATS ============
 if ($type === 'GET_DASHBOARD_STATS') {
     $stats = [
         'users' => $Vani->num_rows("SELECT id FROM users") ?: 0,
@@ -352,7 +318,6 @@ if ($type === 'GET_DASHBOARD_STATS') {
     json_success('Lấy thống kê thành công', ['stats' => $stats]);
 }
 
-// ============ GET USERS LIST ============
 if ($type === 'GET_USERS') {
     $page = intval($_POST['page'] ?? 1);
     $limit = intval($_POST['limit'] ?? 20);
@@ -391,7 +356,6 @@ if ($type === 'GET_USERS') {
     ]);
 }
 
-// ============ GET REPORTS LIST ============
 if ($type === 'GET_REPORTS') {
     $page = intval($_POST['page'] ?? 1);
     $limit = intval($_POST['limit'] ?? 20);
@@ -430,7 +394,6 @@ if ($type === 'GET_REPORTS') {
     ]);
 }
 
-// ============ GET MODERATION LOGS ============
 if ($type === 'GET_MODERATION_LOGS') {
     $page = intval($_POST['page'] ?? 1);
     $limit = intval($_POST['limit'] ?? 20);
@@ -473,4 +436,3 @@ if ($type === 'GET_MODERATION_LOGS') {
 }
 
 json_error('type không hợp lệ');
-
