@@ -114,17 +114,21 @@ $totalPages = ceil($total / $limit);
 
                 <?php if ($log['review_status'] === null): ?>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <button type="button" onclick="reviewModeration(<?php echo $log['id']; ?>, 'approved')" class="h-10 sm:h-9 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition text-sm font-medium flex items-center justify-center gap-2">
-                        <iconify-icon icon="solar:check-circle-linear" width="16"></iconify-icon>
-                        <span class="hidden sm:inline">Approve (Xóa nội dung)</span>
-                        <span class="sm:hidden">Approve & Xóa</span>
+                    <button type="button" onclick="reviewModeration(<?php echo $log['id']; ?>, 'approved')" class="h-10 sm:h-9 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition text-sm font-medium flex items-center justify-center gap-2">
+                        <iconify-icon icon="solar:trash-bin-trash-linear" width="16"></iconify-icon>
+                        <span class="hidden sm:inline">Xác nhận vi phạm (Xóa nội dung)</span>
+                        <span class="sm:hidden">Vi phạm - Xóa</span>
                     </button>
-                    <button type="button" onclick="reviewModeration(<?php echo $log['id']; ?>, 'rejected')" class="h-10 sm:h-9 px-4 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition text-sm font-medium flex items-center justify-center gap-2">
-                        <iconify-icon icon="solar:close-circle-linear" width="16"></iconify-icon>
-                        <span class="hidden sm:inline">Reject (Giữ nội dung)</span>
-                        <span class="sm:hidden">Reject & Giữ</span>
+                    <button type="button" onclick="reviewModeration(<?php echo $log['id']; ?>, 'rejected')" class="h-10 sm:h-9 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition text-sm font-medium flex items-center justify-center gap-2">
+                        <iconify-icon icon="solar:check-circle-linear" width="16"></iconify-icon>
+                        <span class="hidden sm:inline">Không vi phạm (Nội dung đã bị chặn trước đó)</span>
+                        <span class="sm:hidden">Không vi phạm</span>
                     </button>
                 </div>
+                <p class="text-xs text-muted-foreground mt-2">
+                    <iconify-icon icon="solar:info-circle-linear" width="14" class="mr-1"></iconify-icon>
+                    Lưu ý: Nội dung đã bị chặn từ khi người dùng cố gắng đăng. Chọn "Không vi phạm" chỉ đánh dấu là false positive.
+                </p>
                 <?php else: ?>
                 <p class="text-sm text-muted-foreground">
                     Reviewed by <span class="font-medium"><?php echo htmlspecialchars($log['reviewer_full_name'] ?? 'Unknown'); ?></span>
@@ -153,7 +157,10 @@ $totalPages = ceil($total / $limit);
 
 <script>
 function reviewModeration(logId, status) {
-    if (!confirm(status === 'approved' ? 'Xác nhận xóa nội dung vi phạm?' : 'Xác nhận giữ lại nội dung?')) {
+    const message = status === 'approved' 
+        ? 'Xác nhận nội dung vi phạm? Nếu có related_id, nội dung sẽ bị xóa.' 
+        : 'Đánh dấu là không vi phạm (false positive)?';
+    if (!confirm(message)) {
         return;
     }
 

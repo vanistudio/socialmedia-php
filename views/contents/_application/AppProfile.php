@@ -47,6 +47,19 @@ if (!in_array($activeTab, $tabs)) {
     $activeTab = 'posts';
 }
 
+// Build visibility filter for viewing other users' posts
+$visibilityFilter = '';
+if (!$isOwnProfile && $currentUserId > 0) {
+    $visibilityFilter = "AND (
+        p.visibility = 'public' 
+        OR (p.visibility = 'followers' AND EXISTS (
+            SELECT 1 FROM follows WHERE follower_id = '$currentUserId' AND following_id = p.user_id
+        ))
+    )";
+} elseif (!$isOwnProfile) {
+    $visibilityFilter = "AND p.visibility = 'public'";
+}
+
 $tabContent = [];
 $basePostQuery = "SELECT 
     p.*, 
@@ -60,7 +73,8 @@ $basePostQuery = "SELECT
 
 switch ($activeTab) {
     case 'media':
-        $tabContent = $Vani->get_list("SELECT pm.media_url, pm.post_id FROM `post_media` pm JOIN `posts` p ON pm.post_id = p.id WHERE p.user_id = '$profileUserId' ORDER BY p.created_at DESC");
+        $mediaVisibility = $isOwnProfile ? "" : ($currentUserId > 0 ? "AND (p.visibility = 'public' OR (p.visibility = 'followers' AND EXISTS (SELECT 1 FROM follows WHERE follower_id = '$currentUserId' AND following_id = p.user_id)))" : "AND p.visibility = 'public'");
+        $tabContent = $Vani->get_list("SELECT pm.media_url, pm.post_id FROM `post_media` pm JOIN `posts` p ON pm.post_id = p.id WHERE p.user_id = '$profileUserId' $mediaVisibility ORDER BY p.created_at DESC");
         break;
     case 'saved':
         if ($isOwnProfile) {
@@ -69,7 +83,7 @@ switch ($activeTab) {
         break;
     case 'posts':
     default:
-        $tabContent = $Vani->get_list($basePostQuery . " WHERE p.user_id = '$profileUserId' ORDER BY p.created_at DESC");
+        $tabContent = $Vani->get_list($basePostQuery . " WHERE p.user_id = '$profileUserId' $visibilityFilter ORDER BY p.created_at DESC");
         break;
 }
 
@@ -576,12 +590,44 @@ $(document).ready(function() {
         const commentId = $(this).data('comment-id');
         const $self = $(this);
 
-        if (!currentUserId && ['toggle-like','save-post','report-post','reply-comment','toggle-comment-like','delete-comment'].includes(action)) {
+        if (!currentUserId && ['toggle-like','save-post','report-post','reply-comment','toggle-comment-like','delete-comment','edit-post','delete-post'].includes(action)) {
             toast.error('Vui lòng đăng nhập để thực hiện');
             return;
         }
 
         switch (action) {
+            case 'edit-post':
+                // Load post data and open edit dialog
+                $.post('/api/controller/app', { type: 'GET_POST', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
+                    if (data.status === 'success' && data.post) {
+                        const post = data.post;
+                        $('#edit-post-id').val(postId);
+                        $('#edit-post-content').val(post.content || '');
+                        editPostMediaUrls = post.media || [];
+                        renderEditPostMedia();
+                        openEditPostDialog();
+                    } else {
+                        toast.error(data.message || 'Không thể tải bài viết');
+                    }
+                }, 'json').fail(() => toast.error('Không thể kết nối'));
+                break;
+
+            case 'delete-post':
+                if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
+                $.post('/api/controller/app', { type: 'DELETE_POST', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
+                    if (data.status === 'success') {
+                        toast.success(data.message);
+                        $(`#post-${postId}`).fadeOut(300, function() {
+                            $(this).remove();
+                        });
+                    } else {
+                        toast.error(data.message || 'Có lỗi xảy ra');
+                    }
+                }, 'json').fail(function() {
+                    toast.error('Không thể kết nối tới máy chủ');
+                });
+                break;
+
             case 'toggle-like':
                 $.post('/api/controller/app', { type: 'TOGGLE_LIKE', post_id: postId, csrf_token: window.CSRF_TOKEN || '' }, function(data) {
                     if (data.status === 'success') {
@@ -696,6 +742,151 @@ $(document).ready(function() {
         });
     });
 });
+
+// Edit post functionality
+let editPostDialog = null;
+let editPostMediaUrls = [];
+
+function renderEditPostMedia() {
+    const $container = $('#edit-post-media-previews');
+    $container.empty();
+    editPostMediaUrls.forEach((url, index) => {
+        $container.append(`
+            <div class="relative group">
+                <img src="${url}" class="h-24 w-full object-cover rounded-lg">
+                <button type="button" onclick="removeEditPostMedia(${index})" class="absolute top-1 right-1 h-6 w-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <iconify-icon icon="solar:close-circle-linear" width="14"></iconify-icon>
+                </button>
+            </div>
+        `);
+    });
+}
+
+function removeEditPostMedia(index) {
+    editPostMediaUrls.splice(index, 1);
+    renderEditPostMedia();
+}
+
+function openEditPostDialog() {
+    if (editPostDialog) {
+        editPostDialog.open();
+    } else {
+        $('#edit-post-dialog').removeClass('hidden').addClass('flex');
+    }
+}
+
+function closeEditPostDialog() {
+    if (editPostDialog) {
+        editPostDialog.close();
+    } else {
+        $('#edit-post-dialog').addClass('hidden').removeClass('flex');
+    }
+}
+
+$(document).ready(function() {
+    if (window.initDialog) {
+        editPostDialog = window.initDialog('edit-post-dialog');
+    }
+
+    $('#edit-post-media-upload').on('change', function(e) {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('csrf_token', window.CSRF_TOKEN || '');
+            $.ajax({
+                url: '/api/controller/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success' && res.url) {
+                        editPostMediaUrls.push(res.url);
+                        renderEditPostMedia();
+                    } else {
+                        toast.error(res.message || 'Upload thất bại');
+                    }
+                },
+                error: function() {
+                    toast.error('Upload thất bại');
+                }
+            });
+        });
+        $(this).val('');
+    });
+
+    $('#edit-post-form').on('submit', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('button[type=submit]');
+        const originalBtnText = $btn.text();
+        
+        let postData = {};
+        $form.serializeArray().forEach(item => {
+            postData[item.name] = item.value;
+        });
+        
+        if (editPostMediaUrls.length > 0) {
+            postData.media = editPostMediaUrls;
+        }
+        
+        postData.csrf_token = window.CSRF_TOKEN || '';
+        
+        $btn.prop('disabled', true).addClass('opacity-70').text('Đang lưu...');
+        
+        $.post('/api/controller/app', postData, function(data) {
+            if (data.status === 'success') {
+                toast.success(data.message);
+                closeEditPostDialog();
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(function() {
+            toast.error('Không thể kết nối');
+        }).always(function() {
+            $btn.prop('disabled', false).removeClass('opacity-70').text(originalBtnText);
+        });
+    });
+});
 </script>
+
+<!-- Edit Post Dialog -->
+<?php if ($isLoggedIn): ?>
+<div id="edit-post-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog data-state="closed">
+    <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
+    <div class="relative w-full max-w-xl mx-auto p-4" data-dialog-content>
+        <div class="bg-card border border-border rounded-2xl shadow-lg" data-dialog-inner>
+            <div class="flex items-center justify-between p-4 border-b border-border">
+                <h3 class="text-lg font-semibold text-foreground">Chỉnh sửa bài viết</h3>
+                <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent transition flex items-center justify-center" onclick="closeEditPostDialog()">
+                    <iconify-icon icon="solar:close-circle-linear" width="22"></iconify-icon>
+                </button>
+            </div>
+            <form id="edit-post-form" class="p-4">
+                <input type="hidden" name="type" value="UPDATE_POST">
+                <input type="hidden" name="post_id" id="edit-post-id">
+                <div class="space-y-4">
+                    <div>
+                        <textarea name="content" id="edit-post-content" placeholder="Nội dung bài viết..." class="w-full bg-transparent text-foreground placeholder:text-muted-foreground outline-none resize-none text-lg min-h-[120px] border border-input rounded-lg p-3"></textarea>
+                    </div>
+                    <div id="edit-post-media-previews" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+                    <div class="flex items-center justify-between pt-4 border-t border-border">
+                        <div class="flex items-center gap-2">
+                            <button type="button" class="h-9 w-9 rounded-lg hover:bg-accent hover:text-vanixjnk transition flex items-center justify-center" onclick="$('#edit-post-media-upload').click()">
+                                <iconify-icon icon="solar:gallery-wide-linear" width="20"></iconify-icon>
+                            </button>
+                            <input type="file" id="edit-post-media-upload" accept="image/*" class="hidden" multiple>
+                        </div>
+                        <button type="submit" class="h-9 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium">Lưu thay đổi</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppFooter.php'; ?>

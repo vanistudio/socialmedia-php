@@ -111,6 +111,13 @@ if ($type === 'UPDATE_PROFILE') {
     if (isset($_POST['birthday'])) {
         $birthday = check_string2($_POST['birthday']);
         if (!empty($birthday) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
+            // Check if user is at least 13 years old
+            $birthDate = new DateTime($birthday);
+            $today = new DateTime();
+            $age = $today->diff($birthDate)->y;
+            if ($age < 13) {
+                json_error('Bạn phải từ 13 tuổi trở lên để sử dụng dịch vụ');
+            }
             $updateData['birthday'] = $birthday;
         } elseif (empty($birthday)) {
             $updateData['birthday'] = null;
@@ -584,6 +591,12 @@ if ($type === 'CREATE_CONVERSATION') {
     if (!$targetUser) json_error('Người dùng không tồn tại');
     
     $uid = intval($currentUser['id']);
+    
+    // Check if blocked
+    $isBlocked = $Vani->get_row("SELECT id FROM `user_blocks` WHERE (`blocker_id` = '$uid' AND `blocked_id` = '$target_user_id') OR (`blocker_id` = '$target_user_id' AND `blocked_id` = '$uid')");
+    if ($isBlocked) {
+        json_error('Không thể nhắn tin với người dùng này');
+    }
     $existing = $Vani->get_row("
         SELECT c.id
         FROM conversations c
@@ -667,6 +680,18 @@ if ($type === 'SEND_MESSAGE') {
     $uid = intval($currentUser['id']);
     $member = $Vani->get_row("SELECT * FROM conversation_members WHERE conversation_id = '$conversation_id' AND user_id = '$uid'");
     if (!$member) json_error('Bạn không có quyền gửi tin nhắn trong cuộc trò chuyện này');
+    
+    // Check if blocked by any member in conversation
+    $blockedMember = $Vani->get_row("
+        SELECT ub.id FROM user_blocks ub
+        INNER JOIN conversation_members cm ON cm.user_id = ub.blocker_id OR cm.user_id = ub.blocked_id
+        WHERE cm.conversation_id = '$conversation_id' 
+        AND cm.user_id != '$uid'
+        AND ((ub.blocker_id = '$uid' AND ub.blocked_id = cm.user_id) OR (ub.blocker_id = cm.user_id AND ub.blocked_id = '$uid'))
+    ");
+    if ($blockedMember) {
+        json_error('Không thể gửi tin nhắn do đã bị chặn hoặc đã chặn người dùng này');
+    }
     
     if (!empty($content)) {
         $moderation = moderateContent($content);

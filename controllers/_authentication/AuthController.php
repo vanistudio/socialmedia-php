@@ -18,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 die(json_encode(["status" => "error", "message" => "Tài khoản hoặc email không tồn tại"]));
             } elseif (!password_verify($password, $user_data['password'])) {
                 die(json_encode(["status" => "error", "message" => "Mật khẩu không chính xác"]));
+            } elseif ($user_data['level'] === 'suspended') {
+                die(json_encode(["status" => "error", "message" => "Tài khoản của bạn đã bị đình chỉ. Vui lòng liên hệ quản trị viên."]));
             } else {
                 $user_email = $user_data['email'];
                 $Vani->update("users", ['session' => session_id()], "`email` = '$user_email'");

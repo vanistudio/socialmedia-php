@@ -191,7 +191,7 @@ if ($type === 'ADMIN_CHANGE_USER_LEVEL') {
     $level = $_POST['level'] ?? '';
     
     if ($userId <= 0) json_error('user_id không hợp lệ');
-    if (!in_array($level, ['member', 'admin', 'administrator'])) json_error('level không hợp lệ');
+    if (!in_array($level, ['member', 'admin', 'administrator', 'suspended'])) json_error('level không hợp lệ');
     
     if ($userId == $currentUser['id'] && $level !== 'administrator') {
         json_error('Bạn không thể tự hạ cấp chính mình');
@@ -273,6 +273,50 @@ if ($type === 'ADMIN_DELETE_USER') {
     $Vani->remove('users', "`id` = '$userId'");
     
     json_success('Đã xóa user và tất cả dữ liệu liên quan');
+}
+
+// ============ ADMIN DELETE POST ============
+if ($type === 'ADMIN_DELETE_POST') {
+    $postId = intval($_POST['post_id'] ?? 0);
+    
+    if ($postId <= 0) json_error('post_id không hợp lệ');
+    
+    $post = $Vani->get_row("SELECT * FROM posts WHERE id = '$postId'");
+    if (!$post) json_error('Bài viết không tồn tại');
+    
+    // Delete related data
+    $Vani->remove('post_media', "`post_id` = '$postId'");
+    $Vani->remove('post_likes', "`post_id` = '$postId'");
+    $Vani->remove('post_bookmarks', "`post_id` = '$postId'");
+    $Vani->remove('post_comments', "`post_id` = '$postId'");
+    $Vani->remove('posts', "`id` = '$postId'");
+    
+    json_success('Đã xóa bài viết thành công');
+}
+
+// ============ ADMIN SUSPEND USER ============
+if ($type === 'ADMIN_SUSPEND_USER') {
+    $userId = intval($_POST['user_id'] ?? 0);
+    $suspend = isset($_POST['suspend']) ? ($_POST['suspend'] === 'true' || $_POST['suspend'] === '1' || $_POST['suspend'] === true) : true;
+    
+    if ($userId <= 0) json_error('user_id không hợp lệ');
+    
+    if ($userId == $currentUser['id']) {
+        json_error('Bạn không thể đình chỉ chính mình');
+    }
+    
+    $targetUser = $Vani->get_row("SELECT * FROM users WHERE id = '$userId'");
+    if (!$targetUser) json_error('User không tồn tại');
+    
+    // Set level to 'suspended' or back to 'user'
+    $newLevel = $suspend ? 'suspended' : 'user';
+    
+    $Vani->update('users', [
+        'level' => $newLevel,
+        'session' => null, // Force logout
+    ], "`id` = '$userId'");
+    
+    json_success($suspend ? 'Đã đình chỉ tài khoản' : 'Đã bỏ đình chỉ tài khoản', ['level' => $newLevel]);
 }
 
 if ($type === 'ADMIN_UPDATE_SETTINGS') {

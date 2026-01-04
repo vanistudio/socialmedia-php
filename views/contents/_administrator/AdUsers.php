@@ -47,6 +47,7 @@ $levelOptions = [
     ['value' => 'member', 'label' => 'Member'],
     ['value' => 'admin', 'label' => 'Admin'],
     ['value' => 'administrator', 'label' => 'Administrator'],
+    ['value' => 'suspended', 'label' => 'Suspended'],
 ];
 ?>
 
@@ -173,6 +174,17 @@ $levelOptions = [
                         <iconify-icon icon="solar:key-linear" width="16"></iconify-icon>
                         <span>Reset Password</span>
                     </button>
+                    <?php if ($viewUser['level'] !== 'suspended'): ?>
+                    <button type="button" onclick="suspendUser(<?php echo $viewUser['id']; ?>, true)" class="h-10 px-4 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition text-sm font-medium flex items-center gap-2">
+                        <iconify-icon icon="solar:user-block-linear" width="16"></iconify-icon>
+                        <span>Đình chỉ</span>
+                    </button>
+                    <?php else: ?>
+                    <button type="button" onclick="suspendUser(<?php echo $viewUser['id']; ?>, false)" class="h-10 px-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition text-sm font-medium flex items-center gap-2">
+                        <iconify-icon icon="solar:user-check-linear" width="16"></iconify-icon>
+                        <span>Bỏ đình chỉ</span>
+                    </button>
+                    <?php endif; ?>
                     <button type="button" onclick="deleteUser(<?php echo $viewUser['id']; ?>)" class="h-10 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition text-sm font-medium flex items-center gap-2">
                         <iconify-icon icon="solar:trash-bin-trash-linear" width="16"></iconify-icon>
                         <span>Xóa User</span>
@@ -394,6 +406,29 @@ function deleteUser(userId) {
         if (data.status === 'success') {
             toast.success('Đã xóa user');
             setTimeout(() => window.location.href = '/admin/users', 500);
+        } else {
+            toast.error(data.message || 'Có lỗi xảy ra');
+        }
+    }, 'json').fail(function() {
+        toast.error('Không thể kết nối tới máy chủ');
+    });
+}
+
+function suspendUser(userId, suspend) {
+    const action = suspend ? 'đình chỉ' : 'bỏ đình chỉ';
+    if (!confirm(`Xác nhận ${action} tài khoản này?`)) {
+        return;
+    }
+
+    $.post('/api/controller/admin', {
+        type: 'ADMIN_SUSPEND_USER',
+        user_id: userId,
+        suspend: suspend ? 'true' : 'false',
+        csrf_token: window.CSRF_TOKEN || ''
+    }, function(data) {
+        if (data.status === 'success') {
+            toast.success(data.message);
+            setTimeout(() => window.location.reload(), 500);
         } else {
             toast.error(data.message || 'Có lỗi xảy ra');
         }

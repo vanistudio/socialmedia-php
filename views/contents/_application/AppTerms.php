@@ -45,7 +45,7 @@ $siteTitle = $siteTitle['value'] ?? 'Vani Social';
                         3. Nội dung người dùng
                     </h2>
                     <p class="text-muted-foreground leading-relaxed mb-3">
-                        Bạn giữ quyền sở hữu nội dung mà bạn đăng tải. Tuy nhiên, bằng việc đăng nội dung, bạn cấp cho chúng tôi giấy phép không độc quyền để sử dụng, sao chép, sửa đổi và hiển thị nội dung đó.
+                        Bạn giữ toàn bộ quyền sở hữu đối với nội dung mà bạn đăng tải. Tuy nhiên, khi đăng nội dung lên nền tảng, bạn đồng ý cấp cho chúng tôi quyền sử dụng không độc quyền, miễn phí bản quyền, có thể chuyển nhượng để hiển thị, sao chép, lưu trữ và phân phối nội dung đó nhằm mục đích vận hành và cải thiện dịch vụ.
                     </p>
                     <p class="text-muted-foreground leading-relaxed">Bạn không được đăng nội dung:</p>
                     <ul class="list-disc pl-6 space-y-2 text-muted-foreground mt-2">
