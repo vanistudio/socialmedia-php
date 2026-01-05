@@ -24,6 +24,14 @@ $conversations = $Vani->get_list("
     FROM conversations c
     INNER JOIN conversation_members cm ON c.id = cm.conversation_id
     WHERE cm.user_id = '$currentUserId'
+    AND NOT EXISTS (
+        SELECT 1 FROM conversation_members cm2
+        INNER JOIN user_blocks ub ON (
+            (ub.blocker_id = '$currentUserId' AND ub.blocked_id = cm2.user_id)
+            OR (ub.blocker_id = cm2.user_id AND ub.blocked_id = '$currentUserId')
+        )
+        WHERE cm2.conversation_id = c.id AND cm2.user_id != '$currentUserId'
+    )
     ORDER BY last_message_time DESC, c.created_at DESC
 ");
 

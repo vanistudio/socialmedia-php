@@ -42,8 +42,6 @@ $totalPages = ceil($total / $limit);
             <p class="text-sm text-muted-foreground">Quản lý nội dung bị flag bởi hệ thống</p>
         </div>
     </div>
-
-    <!-- Tabs -->
     <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <div class="flex items-center gap-1 sm:gap-2 border-b border-border min-w-max">
             <a href="/admin/moderation?status=pending" class="px-3 sm:px-4 py-3 text-sm font-medium border-b-2 <?php echo $status === 'pending' ? 'border-red-500 text-red-500' : 'border-transparent text-muted-foreground hover:text-foreground'; ?> transition flex items-center gap-1">
@@ -139,8 +137,6 @@ $totalPages = ceil($total / $limit);
         </div>
         <?php endforeach; ?>
     </div>
-
-    <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
     <div class="flex items-center justify-center gap-2">
         <?php if ($page > 1): ?>

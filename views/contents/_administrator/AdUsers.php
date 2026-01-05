@@ -330,7 +330,6 @@ $levelOptions = [
         </div>
     </div>
 
-    <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
     <div class="flex items-center justify-center gap-2">
         <?php if ($page > 1): ?>

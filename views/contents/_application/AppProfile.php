@@ -27,10 +27,14 @@ $isOwnProfile = ($isLoggedIn && $currentUserId === $profileUserId);
 
 $isFollowing = false;
 $isBlocked = false;
+$amIBlocked = false;
 if ($isLoggedIn && !$isOwnProfile) {
     $isFollowing = $Vani->num_rows("SELECT id FROM `follows` WHERE `follower_id` = '$currentUserId' AND `following_id` = '$profileUserId'") > 0;
     $isBlocked = $Vani->num_rows("SELECT id FROM `user_blocks` WHERE `blocker_id` = '$currentUserId' AND `blocked_id` = '$profileUserId'") > 0;
+    $amIBlocked = $Vani->num_rows("SELECT id FROM `user_blocks` WHERE `blocker_id` = '$profileUserId' AND `blocked_id` = '$currentUserId'") > 0;
 }
+
+$isMutualBlock = $isBlocked || $amIBlocked;
 
 $stats = [
     'posts' => $Vani->num_rows("SELECT id FROM `posts` WHERE `user_id` = '$profileUserId'") ?: 0,
@@ -88,6 +92,21 @@ switch ($activeTab) {
 
 require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppHeader.php';
 ?>
+
+<?php if ($isMutualBlock && !$isOwnProfile): ?>
+<div class="w-full max-w-5xl mx-auto">
+    <div class="bg-card border border-border rounded-2xl p-8 text-center">
+        <iconify-icon icon="solar:user-block-rounded-linear" width="64" class="text-muted-foreground mx-auto mb-4"></iconify-icon>
+        <h2 class="text-xl font-semibold text-foreground mb-2">Không thể xem trang cá nhân này</h2>
+        <p class="text-muted-foreground mb-4">Bạn đã chặn người dùng này hoặc người dùng đã chặn bạn.</p>
+        <a href="/" class="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-vanixjnk text-white hover:bg-vanixjnk/90 transition text-sm font-medium">
+            <iconify-icon icon="solar:home-2-linear" width="18"></iconify-icon>
+            <span>Về trang chủ</span>
+        </a>
+    </div>
+</div>
+<?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppFooter.php'; ?>
+<?php else: ?>
 
 <div class="w-full max-w-5xl mx-auto">
     <div class="h-48 md:h-64 bg-card border border-border rounded-2xl relative bg-cover bg-center" style="background-image: url('<?php echo htmlspecialchars(!empty($profileUser['banner']) ? $profileUser['banner'] : 'https://placehold.co/1200x400/png'); ?>');"></div>
@@ -883,6 +902,8 @@ $(document).ready(function() {
         </div>
     </div>
 </div>
+<?php endif; ?>
+
 <?php endif; ?>
 
 <?php require $_SERVER['DOCUMENT_ROOT'] . '/views/layouts/_application/AppFooter.php'; ?>

@@ -65,7 +65,6 @@ $keywords = $Vani->get_list("SELECT * FROM blacklist_keywords ORDER BY created_a
     </p>
 </div>
 
-<!-- Add/Edit Dialog -->
 <div id="keyword-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog>
     <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
     <div class="relative w-full max-w-md mx-auto" data-dialog-content>

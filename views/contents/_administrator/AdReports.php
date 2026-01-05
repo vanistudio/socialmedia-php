@@ -40,7 +40,6 @@ $totalPages = ceil($total / $limit);
         </div>
     </div>
 
-    <!-- Tabs -->
     <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <div class="flex items-center gap-1 sm:gap-2 border-b border-border min-w-max">
             <a href="/admin/reports?status=open" class="px-3 sm:px-4 py-3 text-sm font-medium border-b-2 <?php echo $status === 'open' ? 'border-red-500 text-red-500' : 'border-transparent text-muted-foreground hover:text-foreground'; ?> transition flex items-center gap-1">
@@ -103,7 +102,6 @@ $totalPages = ceil($total / $limit);
             </div>
 
             <div class="p-4">
-                <!-- Report reason -->
                 <div class="mb-4">
                     <p class="text-xs text-muted-foreground mb-1">Lý do báo cáo:</p>
                     <span class="px-3 py-1 rounded-lg text-sm font-medium bg-red-500/15 text-red-500"><?php echo htmlspecialchars($report['reason']); ?></span>
@@ -111,8 +109,6 @@ $totalPages = ceil($total / $limit);
                     <p class="mt-2 text-sm text-foreground"><?php echo htmlspecialchars($report['detail']); ?></p>
                     <?php endif; ?>
                 </div>
-
-                <!-- Reported content -->
                 <div class="bg-background rounded-xl p-4 mb-4">
                     <?php if ($report['target_type'] === 'user' && $reportedUser): ?>
                     <div class="flex items-center gap-3">
@@ -168,7 +164,6 @@ $totalPages = ceil($total / $limit);
         <?php endforeach; ?>
     </div>
 
-    <!-- Pagination -->
     <?php if ($totalPages > 1): ?>
     <div class="flex items-center justify-center gap-2">
         <?php if ($page > 1): ?>

@@ -327,12 +327,48 @@ $(document).ready(function() {
             case 'report-post':
                 openReportDialog('post', postId);
                 break;
+                
+            case 'toggle-comments':
+                window.location.href = `/post/${postId}`;
+                break;
         }
+    });
+    
+    $('#report-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const targetType = $('#report-target-type').val();
+        const targetId = $('#report-target-id').val();
+        const reason = $('#report-reason').val();
+        const detail = $('#report-detail').val().trim();
+        
+        const $btn = $('#btn-submit-report');
+        const original = $btn.html();
+        $btn.prop('disabled', true).html('<span>Đang gửi...</span>');
+        
+        $.post('/api/controller/app', {
+            type: 'REPORT_ENTITY',
+            target_type: targetType,
+            target_id: targetId,
+            reason: reason + (detail ? ': ' + detail : ''),
+            csrf_token: window.CSRF_TOKEN || ''
+        }, function(data) {
+            $btn.prop('disabled', false).html(original);
+            
+            if (data.status === 'success') {
+                toast.success(data.message);
+                closeReportDialog();
+            } else {
+                toast.error(data.message || 'Có lỗi xảy ra');
+            }
+        }, 'json').fail(function() {
+            $btn.prop('disabled', false).html(original);
+            toast.error('Không thể kết nối tới máy chủ');
+        });
     });
 });
 </script>
 
-<!-- Edit Post Dialog -->
 <?php if ($isLoggedIn): ?>
 <div id="edit-post-dialog" class="hidden fixed inset-0 z-50 items-center justify-center" data-dialog data-state="closed">
     <div class="absolute inset-0 bg-black/50" data-dialog-backdrop></div>
@@ -367,7 +403,6 @@ $(document).ready(function() {
     </div>
 </div>
 
-<!-- Report Dialog -->
 <div id="report-dialog" class="dialog hidden fixed inset-0 z-50 flex items-center justify-center p-4" data-dialog data-state="closed">
     <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" data-dialog-backdrop></div>
     <div class="relative w-full max-w-md mx-auto" data-dialog-content>
