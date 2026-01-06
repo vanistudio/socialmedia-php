@@ -554,12 +554,18 @@ window.vanixjnkdev = {
                     closeSelect(selectContainer);
                 });
             });
-            document.addEventListener('click', function (e) {
-                if (!selectContainer.contains(e.target)) {
-                    closeSelect(selectContainer);
-                }
-            });
         });
+
+        if (!window._customSelectDocClickAdded) {
+            window._customSelectDocClickAdded = true;
+            document.addEventListener('click', function (e) {
+                document.querySelectorAll('.custom-select-container').forEach(container => {
+                    if (!container.contains(e.target)) {
+                        closeSelect(container);
+                    }
+                });
+            });
+        }
 
         function openSelect(container) {
             const content = container.querySelector('.custom-select-content');
@@ -567,16 +573,28 @@ window.vanixjnkdev = {
             const chevron = container.querySelector('.fa-chevron-down') || container.querySelector('.chevron-icon');
 
             content.classList.remove('hidden');
-            const rect = trigger.getBoundingClientRect();
-            content.style.position = 'fixed';
-            content.style.top = (rect.bottom + 4) + 'px';
-            content.style.left = rect.left + 'px';
-            content.style.width = rect.width + 'px';
-            content.style.maxHeight = '200px';
-            const dropdownHeight = content.scrollHeight;
-            const viewportHeight = window.innerHeight;
-            if (rect.bottom + dropdownHeight + 8 > viewportHeight) {
-                content.style.top = (rect.top - dropdownHeight - 4) + 'px';
+            
+            const isInsideDialog = container.closest('[data-dialog]') !== null;
+            
+            if (isInsideDialog) {
+                content.style.position = 'absolute';
+                content.style.top = '100%';
+                content.style.left = '0';
+                content.style.width = '100%';
+                content.style.marginTop = '4px';
+                content.style.maxHeight = '200px';
+            } else {
+                const rect = trigger.getBoundingClientRect();
+                content.style.position = 'fixed';
+                content.style.top = (rect.bottom + 4) + 'px';
+                content.style.left = rect.left + 'px';
+                content.style.width = rect.width + 'px';
+                content.style.maxHeight = '200px';
+                const dropdownHeight = content.scrollHeight;
+                const viewportHeight = window.innerHeight;
+                if (rect.bottom + dropdownHeight + 8 > viewportHeight) {
+                    content.style.top = (rect.top - dropdownHeight - 4) + 'px';
+                }
             }
             
             requestAnimationFrame(() => {
@@ -596,6 +614,7 @@ window.vanixjnkdev = {
                     content.style.top = '';
                     content.style.left = '';
                     content.style.width = '';
+                    content.style.marginTop = '';
                 }
             }, 100);
         }

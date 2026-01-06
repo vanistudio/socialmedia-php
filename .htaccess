@@ -32,16 +32,16 @@ RewriteRule ^u/([^/]+)$ views/contents/_application/AppProfile.php?username=$1 [
 RewriteRule ^post/([0-9]+)$ views/contents/_application/AppPost.php?id=$1 [L,QSA]
 
 # Settings page: /settings
-RewriteRule ^settings$ views/contents/_application/AppSetting.php [L]
+RewriteRule ^settings$ views/contents/_application/AppSetting.php [L,QSA]
 
 # Messages page: /messages
-RewriteRule ^messages$ views/contents/_application/AppMessages.php [L]
+RewriteRule ^messages$ views/contents/_application/AppMessages.php [L,QSA]
 
 # Notifications page: /notifications
-RewriteRule ^notifications$ views/contents/_application/AppNotifications.php [L]
+RewriteRule ^notifications$ views/contents/_application/AppNotifications.php [L,QSA]
 
 # Explore page: /explore
-RewriteRule ^explore$ views/contents/_application/AppExplore.php [L]
+RewriteRule ^explore$ views/contents/_application/AppExplore.php [L,QSA]
 
 # Forgot password page: /forgot-password
 RewriteRule ^forgot-password$ views/contents/_authentication/AuthForgotPassword.php [L]
@@ -53,19 +53,19 @@ RewriteRule ^about$ views/contents/_application/AppAbout.php [L]
 
 # ==================== ADMIN ROUTES ====================
 # Admin dashboard: /admin
-RewriteRule ^admin$ views/contents/_administrator/AdDashboard.php [L]
+RewriteRule ^admin$ views/contents/_administrator/AdDashboard.php [L,QSA]
 
 # Admin moderation: /admin/moderation
-RewriteRule ^admin/moderation$ views/contents/_administrator/AdModeration.php [L]
+RewriteRule ^admin/moderation$ views/contents/_administrator/AdModeration.php [L,QSA]
 
 # Admin blacklist: /admin/blacklist
-RewriteRule ^admin/blacklist$ views/contents/_administrator/AdBlacklist.php [L]
+RewriteRule ^admin/blacklist$ views/contents/_administrator/AdBlacklist.php [L,QSA]
 
 # Admin reports: /admin/reports
-RewriteRule ^admin/reports$ views/contents/_administrator/AdReports.php [L]
+RewriteRule ^admin/reports$ views/contents/_administrator/AdReports.php [L,QSA]
 
 # Admin users: /admin/users
-RewriteRule ^admin/users$ views/contents/_administrator/AdUsers.php [L]
+RewriteRule ^admin/users$ views/contents/_administrator/AdUsers.php [L,QSA]
 
 # Admin settings: /admin/settings
-RewriteRule ^admin/settings$ views/contents/_administrator/AdSettings.php [L]
+RewriteRule ^admin/settings$ views/contents/_administrator/AdSettings.php [L,QSA]

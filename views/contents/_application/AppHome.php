@@ -960,7 +960,7 @@ $(document).ready(function() {
 });
 </script>
 
-<div id="report-dialog" class="dialog hidden fixed inset-0 z-50 items-center justify-center p-4" data-dialog data-state="closed">
+<div id="report-dialog" class="dialog hidden fixed inset-0 z-50 flex items-center justify-center p-4" data-dialog data-state="closed">
     <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" data-dialog-backdrop></div>
     <div class="relative w-full max-w-md mx-auto" data-dialog-content>
         <div class="bg-card border border-border rounded-2xl shadow-lg" data-dialog-inner>
